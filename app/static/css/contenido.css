@@ -1,0 +1,33 @@
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+.navbar-nav .nav-link.active{
+  font-size: 15px;
+}
+.titulo{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80px;
+  background-color: #496899;
+  color: white;
+}
+.titulo h1{
+  font-size: 30px;
+}
+
+.page {
+    width: 100%;
+    min-height: calc(100vh - 136px); 
+}
+.contenido {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 50px; 
+
+}

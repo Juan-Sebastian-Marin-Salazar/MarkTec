@@ -1,0 +1,286 @@
+  /* Reset y estilos base */
+
+    
+    body {
+      background-color: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .contenido {
+      display: flex;
+
+      width: 100%;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    
+    /* Panel izquierdo - Imagen/Color */
+    .img {
+      flex: 1;
+      background: linear-gradient(135deg, #003d7a 0%, #496899 100%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      color: white;
+      text-align: center;
+    }
+    
+    .img::before {
+      content: "MarketPlace";
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .img::after {
+      content: "Inicia sesión en tu cuenta";
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    /* Panel derecho - Formulario */
+    .forms-container {
+      flex: 1;
+      padding: 50px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .sub-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .sub-titulo {
+      font-size: 1.8rem;
+      color: #003d7a;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .form-description {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      max-width: 80%;
+    }
+    
+    /* Formularios */
+    .login-datos {
+      background: white;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      margin-bottom: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .datos {
+      margin-bottom: 25px;
+    }
+    
+    .datos label {
+      display: block;
+      margin-bottom: 8px;
+      color: #003d7a;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .datos span {
+      display: block;
+      margin-bottom: 8px;
+      color: #003d7a;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .datos input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e1e5eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: border-color 0.3s ease;
+      background-color: #f8f9fb;
+    }
+    
+    .datos input:focus {
+      outline: none;
+      border-color: #0066cc;
+      background-color: white;
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+    
+    .datos input::placeholder {
+      color: #a0a4a8;
+      font-size: 0.9rem;
+    }
+    
+    .help-text {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 6px;
+      font-style: italic;
+    }
+    
+    /* Checkbox personalizado */
+    .checkbox-container {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+    
+    .checkbox-container input[type="checkbox"] {
+      margin-right: 10px;
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      accent-color: #0066cc;
+    }
+    
+    .checkbox-label {
+      font-size: 0.9rem;
+      color: #003d7a;
+    }
+    
+    /* Botón */
+    .boton {
+      margin-top: 30px;
+    }
+    
+    .login-boton {
+      width: 100%;
+      padding: 16px;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .login-boton:hover {
+      background: #0052a3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 102, 204, 0.3);
+    }
+    
+    /* Enlace de registro */
+    .identificar {
+      text-align: center;
+      margin-top: 25px;
+      padding: 0;
+    }
+    
+    .identificar p {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+    
+    .identificar a {
+      color: #0066cc;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+    
+    .identificar a:hover {
+      color: #003d7a;
+      text-decoration: underline;
+    }
+    
+    /* Formulario de registro */
+    .identificacion-form {
+      background: white;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      margin-top: 0;
+      display: none;
+    }
+    
+    /* Línea divisoria */
+    .divider {
+      height: 1px;
+      background: #e1e5eb;
+      margin: 25px 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .contenido {
+        flex-direction: column;
+        width: 95%;
+        margin: 10px;
+      }
+      
+      .img {
+        min-height: 180px;
+        flex: none;
+      }
+      
+      .img::before {
+        font-size: 1.8rem;
+      }
+      
+      .img::after {
+        font-size: 1rem;
+      }
+      
+      .forms-container {
+        padding: 30px 25px;
+      }
+      
+      .sub-titulo {
+        font-size: 1.6rem;
+      }
+      
+      .form-description {
+        max-width: 100%;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .forms-container {
+        padding: 25px 20px;
+      }
+      
+      .sub-titulo {
+        font-size: 1.4rem;
+      }
+      
+      .datos input {
+        padding: 12px 14px;
+      }
+      
+      .login-boton {
+        padding: 14px;
+        font-size: 1rem;
+      }
+    }
