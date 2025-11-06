@@ -1,6 +1,4 @@
-  /* Reset y estilos base */
-
-    
+  /* #region Estilos base */
     body {
       background-color: #f5f7fa;
       color: #333;
@@ -18,15 +16,16 @@
     
     .contenido {
       display: flex;
-
       width: 100%;
       background: white;
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
       overflow: hidden;
     }
+    /* #endregion  */
+
     
-    /* Panel izquierdo - Imagen/Color */
+    /* #region img */
     .img {
       flex: 1;
       background: linear-gradient(135deg, #003d7a 0%, #496899 100%);
@@ -53,7 +52,9 @@
       font-size: 1.2rem;
       opacity: 0.9;
     }
-    
+    /* #endregion img */
+
+
     /* Panel derecho - Formulario */
     .forms-container {
       flex: 1;
@@ -165,7 +166,7 @@
       color: #003d7a;
     }
     
-    /* Botón */
+    /*#region boton */
     .boton {
       margin-top: 30px;
     }
@@ -188,7 +189,8 @@
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(0, 102, 204, 0.3);
     }
-    
+    /* #endregion boton */
+
     /* Enlace de registro */
     .identificar {
       text-align: center;
@@ -232,7 +234,7 @@
       margin: 25px 0;
     }
     
-    /* Responsive */
+    /* #region Responsive */
     @media (max-width: 768px) {
       .contenido {
         flex-direction: column;
@@ -284,3 +286,4 @@
         font-size: 1rem;
       }
     }
+    /* #endregion responsive */
