@@ -119,12 +119,13 @@
     
     .datos input {
       width: 100%;
-      padding: 14px 16px;
-      border: 2px solid #e1e5eb;
-      border-radius: 8px;
       font-size: 0.95rem;
       transition: border-color 0.3s ease;
       background-color: #f8f9fb;
+          width: 100%;
+    padding: 0.75rem;
+    border-radius: 4px;
+    box-sizing: border-box;
     }
     
     .datos input:focus {
@@ -235,6 +236,7 @@
     }
     
     /* #region Responsive */
+
     @media (max-width: 768px) {
       .contenido {
         flex-direction: column;
@@ -287,3 +289,78 @@
       }
     }
     /* #endregion responsive */
+
+
+.forms-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+
+.hidden {
+    display: none !important;
+}
+
+.datos {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.datos label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.datos input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.help-text {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.boton {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.login-boton {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.login-boton:hover {
+    background-color: #0056b3;
+}
+
+.divider {
+    height: 1px;
+    background-color: #ddd;
+    margin: 1.5rem 0;
+}
+
+.identificar {
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.identificar a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.identificar a:hover {
+    text-decoration: underline;
+}
