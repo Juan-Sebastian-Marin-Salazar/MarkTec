@@ -8,7 +8,7 @@ SET SQL_MODE='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISIO
 CREATE TABLE IF NOT EXISTS roles (
   idRoles INT AUTO_INCREMENT PRIMARY KEY,
   nombre_rol VARCHAR(50) NOT NULL UNIQUE,
-  tipo_rol VARCHAR(20) NOT NULL DEFAULT 'comun',
+  tipo_rol VARCHAR(20) NOT NULL DEFAULT 'regular',
   descripcion TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -19,10 +19,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   correo VARCHAR(255) NOT NULL UNIQUE,
   clave_hash VARCHAR(255) NOT NULL,
   telefono VARCHAR(30),
-  universidad VARCHAR(255),
-  carnet_universitario VARCHAR(100),
-  correo_verificado TINYINT(1) NOT NULL DEFAULT 0,
-  estado_verificacion_vendedor VARCHAR(30) NOT NULL DEFAULT 'ninguno',
+  universidad VARCHAR(255) DEFAULT 'Tecnologico de Mexicali',
+  matricula VARCHAR(100),
   es_vendedor_verificado TINYINT(1) NOT NULL DEFAULT 0,
   creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -206,8 +204,8 @@ INSERT INTO roles (nombre_rol, tipo_rol, descripcion) VALUES
 ('administrador','system','Administrador con todos los permisos'),
 ('moderador','system','Modera y revisa contenido'),
 ('soporte','system','Atiende tickets y verifica vendedores'),
-('vendedor','common','Usuario que publica productos'),
-('comprador','common','Usuario que compra')
+('vendedor','regular','Usuario que publica productos'),
+('comprador','regular','Usuario que compra')
 ON DUPLICATE KEY UPDATE nombre_rol = VALUES(nombre_rol);
 
 INSERT INTO etiquetas (nombre_etiqueta, slug, id_creador, esta_activa) VALUES

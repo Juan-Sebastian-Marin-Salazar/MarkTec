@@ -273,3 +273,16 @@ body {
 }
 
 /* #endregion categoria*/
+
+.logout-btn {
+    margin-left: 10px;
+    color: #333;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.logout-btn:hover {
+    color: red;
+}

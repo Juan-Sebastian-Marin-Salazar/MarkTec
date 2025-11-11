@@ -4,7 +4,7 @@
 <head>
   <meta charset='utf-8'>
   <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-  <title>login</title>
+  <title>Registro</title>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
   <link rel="stylesheet" href="../../static/css/contenido.css">
   <link rel="stylesheet" href="../../static/css/log.css">
@@ -18,16 +18,26 @@
         <div class="forms-container">
             <div class="sub-container">
                 <div class="sub-titulo">Marketec</div>
-                <div class="form-description">Inicia sesión en tu cuenta</div>
+                <div class="form-description">Crear cuenta</div>
             </div>
 
-            <!-- Contenedor para ambos formularios -->
             <div class="forms-wrapper">
-                <!-- Formulario de login -->
-                <form class="login-datos active" method="POST" action="/login">
+                <form class="login-datos active" method="POST" action="/registro">
+
                     <div class="datos">
-                        <label for="correo">Correo</label>
+                        <label for="nombre">Nombre completo</label>
+                        <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+                    </div>
+
+                    <div class="datos">
+                        <label for="matricula">Matrícula</label>
+                        <input type="text" id="matricula" name="matricula" required placeholder="A00000000">
+                    </div>
+
+                    <div class="datos">
+                        <label for="correo">Correo institucional</label>
                         <input type="email" id="correo" name="correo" required placeholder="@mexicali.tecnm.mx o @itmexicali.edu.mx">
+                        <div class="help-text">Usa tu correo del Instituto Tecnológico de Mexicali</div>
                     </div>
 
                     <div class="datos">
@@ -35,22 +45,27 @@
                         <input type="password" id="password" name="password" required placeholder="………">
                     </div>
 
+                    <div class="datos">
+                        <label for="confirm">Confirmar contraseña</label>
+                        <input type="password" id="confirm" name="confirm" required placeholder="………">
+                    </div>
+
                     <div class="boton">
-                        <button type="submit" class="login-boton">Iniciar Sesión</button>
+                        <button type="submit" class="login-boton">Crear cuenta</button>
                     </div>
                 </form>
             </div>
 
             <div class="divider"></div>
+
             <div class="identificar">
-                <p>Solo se permite el acceso con correo constitucional ¿No tienes una cuenta? 
-                   <a href="/registro">Regístrate aquí</a>
+                <p>¿Ya tienes una cuenta?
+                    <a href="/login">Inicia sesión</a>
                 </p>
             </div>
         </div>
     </div>
 </div>
-  <script src="../../static/js/login.js">
-  </script>
+
 </body>
 </html>
