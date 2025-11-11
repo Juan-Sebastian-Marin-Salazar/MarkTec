@@ -173,9 +173,10 @@ body {
 }
 
 
-.cliente.active,
-.vendor.active {
-    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+.cliente.activo,
+.vendor.activo {
+    background-color: #0066CC;
+    color: #FFF;
 }
 
 /* #endregion menu */
