@@ -37,98 +37,103 @@
                         <button class="cliente activo">
                             <span>Cliente</span>
                         </button>
-                        <button class="vendor">
+                        <button class="vendor" data-verificado="{{ 'true' if es_verificado else 'false' }}"
+                            onclick="manejarBotonVendedor(this)">
                             <span>Vendedor</span>
                         </button>
                     </div>
-                    {% if not es_verificado %}
-                    <div class="verificacion-bloque">
-                        <p>Aun no estas verificado</p>
-                        <a href="/verificar-vendedor" class="btn-verificar">Verificarse como vendedor</a>
-                    </div>
-                    {% else %}
-                    <div class="verificacion-bloque">
-                        <p class="verificado-texto">Ya estas verificado</p>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <div class="categoria">
-            <div class="tipo_categoria">
-                <div class="categoria-header">
-                    <h1 class="sub_titulo">Explora Producto</h1>
-                    <div class="controles-vendedor" id="controlesVendedor">
-                        <button class="btn-agregar" id="btnAgregarProducto">+ Agregar Producto</button>
+            <div class="categoria">
+                <div class="tipo_categoria">
+                    <div class="categoria-header">
+                        <h1 class="sub_titulo">Explora Producto</h1>
+                        <div class="controles-vendedor" id="controlesVendedor">
+                            <button class="btn-agregar" id="btnAgregarProducto">+ Agregar Producto</button>
+                        </div>
+                    </div>
+                    <div class="filtros-categoria">
+                        <div class="filtro activo">Todos</div>
+                        <div class="filtro">Alimentos</div>
+                        <div class="filtro">Productos</div>
+                        <div class="filtro">Servicios</div>
                     </div>
                 </div>
-                <div class="filtros-categoria">
-                    <div class="filtro activo">Todos</div>
-                    <div class="filtro">Alimentos</div>
-                    <div class="filtro">Productos</div>
-                    <div class="filtro">Servicios</div>
+
+
+                <div class="contenido_categoria">
+                    <div class="producto">
+                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+1" alt="Producto 1">
+                        <p class="nombre_v detalle">Nombre de vendedor</p>
+                        <p class="nombre_p">Nombre de producto</p>
+                        <p class="descripcion detalle">Descripción breve del producto </p>
+                        <p class="precio detalle">Precio</p>
+                    </div>
+                    <div class="producto">
+                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+2" alt="Producto 2">
+                        <p class="nombre_v detalle">Nombre de vendedor</p>
+                        <p class="nombre_p">Nombre de producto</p>
+                        <p class="descripcion detalle">Descripción breve del producto </p>
+                        <p class="precio detalle">Precio</p>
+                    </div>
+                    <div class="producto">
+                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+3" alt="Producto 3">
+                        <p class="nombre_v detalle">Nombre de vendedor</p>
+                        <p class="nombre_p">Nombre de producto</p>
+                        <p class="descripcion detalle">Descripción breve del producto </p>
+                        <p class="precio detalle">Precio</p>
+                    </div>
+                    <div class="producto">
+                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+4" alt="Producto 4">
+                        <p class="nombre_v detalle">Nombre de vendedor</p>
+                        <p class="nombre_p">Nombre de producto</p>
+                        <p class="descripcion detalle">Descripción breve del producto </p>
+                        <p class="precio detalle">Precio</p>
+                    </div>
+                    <div class="producto mi-producto" data-vendedor="propio">
+                        <img src="https://via.placeholder.com/200x150/4299e1/fff?text=Mi+Producto" alt="Mi Producto 1">
+                        <p class="nombre_v detalle">Tú</p>
+                        <p class="nombre_p">Mi Producto 1</p>
+                        <p class="descripcion detalle">Este es mi producto </p>
+                        <p class="precio detalle">$15.00</p>
+                    </div>
+
+                    <div class="producto" data-vendedor="otro">
+                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+2" alt="Producto 2">
+                        <p class="nombre_v detalle">Vendedor Externo 2</p>
+                        <p class="nombre_p">Otro Producto</p>
+                        <p class="descripcion detalle">Descripción breve del producto </p>
+                        <p class="precio detalle">$30.00</p>
+                    </div>
+
+                    <div class="producto mi-producto" data-vendedor="propio">
+                        <img src="https://via.placeholder.com/200x150/4299e1/fff?text=Mi+Producto" alt="Mi Producto 2">
+                        <p class="nombre_v detalle">Tú</p>
+                        <p class="nombre_p">Mi Producto 2</p>
+                        <p class="descripcion detalle">Este es otro de mis productos </p>
+                        <p class="precio detalle">$20.00</p>
+                    </div>
                 </div>
+
             </div>
-
-
-            <div class="contenido_categoria">
-                <div class="producto">
-                    <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+1" alt="Producto 1">
-                    <p class="nombre_v detalle">Nombre de vendedor</p>
-                    <p class="nombre_p">Nombre de producto</p>
-                    <p class="descripcion detalle">Descripción breve del producto </p>
-                    <p class="precio detalle">Precio</p>
-                </div>
-                <div class="producto">
-                    <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+2" alt="Producto 2">
-                    <p class="nombre_v detalle">Nombre de vendedor</p>
-                    <p class="nombre_p">Nombre de producto</p>
-                    <p class="descripcion detalle">Descripción breve del producto </p>
-                    <p class="precio detalle">Precio</p>
-                </div>
-                <div class="producto">
-                    <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+3" alt="Producto 3">
-                    <p class="nombre_v detalle">Nombre de vendedor</p>
-                    <p class="nombre_p">Nombre de producto</p>
-                    <p class="descripcion detalle">Descripción breve del producto </p>
-                    <p class="precio detalle">Precio</p>
-                </div>
-                <div class="producto">
-                    <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+4" alt="Producto 4">
-                    <p class="nombre_v detalle">Nombre de vendedor</p>
-                    <p class="nombre_p">Nombre de producto</p>
-                    <p class="descripcion detalle">Descripción breve del producto </p>
-                    <p class="precio detalle">Precio</p>
-                </div>
-                <div class="producto mi-producto" data-vendedor="propio">
-                    <img src="https://via.placeholder.com/200x150/4299e1/fff?text=Mi+Producto" alt="Mi Producto 1">
-                    <p class="nombre_v detalle">Tú</p>
-                    <p class="nombre_p">Mi Producto 1</p>
-                    <p class="descripcion detalle">Este es mi producto </p>
-                    <p class="precio detalle">$15.00</p>
-                </div>
-
-                <div class="producto" data-vendedor="otro">
-                    <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+2" alt="Producto 2">
-                    <p class="nombre_v detalle">Vendedor Externo 2</p>
-                    <p class="nombre_p">Otro Producto</p>
-                    <p class="descripcion detalle">Descripción breve del producto </p>
-                    <p class="precio detalle">$30.00</p>
-                </div>
-
-                <div class="producto mi-producto" data-vendedor="propio">
-                    <img src="https://via.placeholder.com/200x150/4299e1/fff?text=Mi+Producto" alt="Mi Producto 2">
-                    <p class="nombre_v detalle">Tú</p>
-                    <p class="nombre_p">Mi Producto 2</p>
-                    <p class="descripcion detalle">Este es otro de mis productos </p>
-                    <p class="precio detalle">$20.00</p>
-                </div>
-            </div>
-
         </div>
     </div>
-    </div>
+
+    <script>
+        function manejarBotonVendedor(boton) {
+            const esVerificado = boton.getAttribute('data-verificado') === 'true';
+
+            if (!esVerificado) {
+                window.location.href = "/verificar-vendedor";
+            } else {
+                // Acciones para vendedor verificado
+                console.log("Usuario verificado - realizar acciones");
+                // Tus funciones para vendedores aquí
+            }
+        }
+    </script>
     <script src="../../static/js/vendedor.js"></script>
 </body>
 

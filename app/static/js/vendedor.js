@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnAgregarProducto = document.getElementById('btnAgregarProducto');
     const productos = document.querySelectorAll('.producto');
 
+    // Obtener el estado de verificación del data attribute
+    const datosUsuario = document.getElementById('datos-usuario');
+    const esVerificado = datosUsuario ? datosUsuario.getAttribute('data-verificado') === 'true' : false;
+
     // Inicializar estado - Cliente activo por defecto
     let modoActual = 'cliente';
 
@@ -20,6 +24,12 @@ document.addEventListener('DOMContentLoaded', function() {
         btnVendedor.classList.remove('activo');
         
         if (modo === 'vendedor') {
+            // Verificar si el usuario está verificado antes de cambiar a modo vendedor
+            if (!esVerificado) {
+                window.location.href = "/verificar-vendedor";
+                return;
+            }
+            
             // Activar modo vendedor
             btnVendedor.classList.add('activo');
             
@@ -95,17 +105,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Funciones para manejar productos
     function agregarProducto() {
+        // Verificar nuevamente si está verificado antes de agregar producto
+        if (!esVerificado) {
+            alert('Debes estar verificado para agregar productos');
+            window.location.href = "/verificar-vendedor";
+            return;
+        }
         alert('Abriendo formulario para agregar nuevo producto');
         // Aquí puedes implementar la lógica para agregar producto
         // Por ejemplo: mostrar un modal, redirigir a formulario, etc.
     }
 
     function editarProducto(id) {
+        if (!esVerificado) {
+            alert('Debes estar verificado para editar productos');
+            window.location.href = "/verificar-vendedor";
+            return;
+        }
         alert(`Editando producto ${id}`);
         // Aquí puedes implementar la lógica para editar producto
     }
 
     function eliminarProducto(id) {
+        if (!esVerificado) {
+            alert('Debes estar verificado para eliminar productos');
+            window.location.href = "/verificar-vendedor";
+            return;
+        }
         if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
             alert(`Producto ${id} eliminado`);
             // Aquí puedes implementar la lógica para eliminar producto
