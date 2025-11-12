@@ -286,3 +286,28 @@ body {
 .logout-btn:hover {
     color: red;
 }
+
+.verificacion-bloque {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f3f3f3;
+    border-radius: 8px;
+}
+
+.btn-verificar {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.btn-verificar:hover {
+    background: #0056b3;
+}
+
+.verificado-texto {
+    color: green;
+    font-weight: bold;
+}

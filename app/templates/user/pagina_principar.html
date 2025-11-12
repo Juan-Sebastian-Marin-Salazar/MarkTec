@@ -40,6 +40,16 @@
                             <span>Vendedor</span>
                         </button>
                     </div>
+                    {% if not es_verificado %}
+                    <div class="verificacion-bloque">
+                        <p>Aun no estas verificado</p>
+                        <a href="/verificar-vendedor" class="btn-verificar">Verificarse como vendedor</a>
+                    </div>
+                    {% else %}
+                    <div class="verificacion-bloque">
+                        <p class="verificado-texto">Ya estas verificado</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
