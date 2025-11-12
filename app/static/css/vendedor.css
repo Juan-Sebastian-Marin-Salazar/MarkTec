@@ -1,0 +1,102 @@
+/* Estilos para el encabezado de categoría */
+.categoria-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    padding-right: 20px;
+    margin-bottom: 0;
+}
+
+.tipo_categoria .sub_titulo {
+    font-size: 24px;
+    margin: 0;
+    padding: 0;
+}
+
+/* Controles de vendedor en el header */
+.controles-vendedor {
+    display: none;
+}
+
+.btn-agregar {
+    background: #0066CC;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-agregar:hover {
+    background: rgba(0, 102, 204, 0.7); /* #0066CC con 70% de opacidad (30% de transparencia) */
+}
+
+/* Asegurar que los filtros tengan su espacio */
+.filtros-categoria {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-left: 15px;
+    padding-top: 10px;
+}
+
+/* Estilos para productos del vendedor actual */
+.producto.mi-producto {
+    border-left: 4px solid #4299e1;
+    position: relative;
+}
+
+.producto.mi-producto::before {
+    content: "Tú";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #4299e1;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Controles para productos propios en modo vendedor */
+.controles-producto {
+    display: none;
+    margin-top: 15px;
+    gap: 10px;
+    justify-content: center;
+}
+
+.producto.mostrar-controles .controles-producto {
+    display: flex;
+}
+
+.btn-editar, .btn-eliminar {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.btn-editar {
+    background: #ed8936;
+    color: white;
+}
+
+.btn-editar:hover {
+    background: #dd7711;
+}
+
+.btn-eliminar {
+    background: #f56565;
+    color: white;
+}
+
+.btn-eliminar:hover {
+    background: #e53e3e;
+}
