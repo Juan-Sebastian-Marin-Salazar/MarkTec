@@ -173,9 +173,10 @@ body {
 }
 
 
-.cliente.active,
-.vendor.active {
-    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+.cliente.activo,
+.vendor.activo {
+    background-color: #0066CC;
+    color: #FFF;
 }
 
 /* #endregion menu */
@@ -273,16 +274,3 @@ body {
 }
 
 /* #endregion categoria*/
-
-.logout-btn {
-    margin-left: 10px;
-    color: #333;
-    font-weight: bold;
-    text-decoration: none;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-.logout-btn:hover {
-    color: red;
-}
