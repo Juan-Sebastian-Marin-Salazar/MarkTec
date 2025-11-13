@@ -12,6 +12,7 @@
 
 <body>
     <div class="page">
+        <div id="datos-usuario" data-verificado="{{ 'true' if es_verificado else 'false' }}" style="display: none;"></div>
         <div class="header">
             <div class="left-section">
                 <h2 class="titulo">MarketPlace</h2>
@@ -24,6 +25,12 @@
                 <div class="user-info">
                     <span class="user-letter">{{ nombre }}</span>
                     <span>{{ matricula }}</span>
+                    <!-- Mostrar todos los roles del usuario -->
+                    <div class="roles-container">
+                        {% for rol in roles %}
+                            <span class="badge badge-{{ rol|lower }}">{{ rol|capitalize }}</span>
+                        {% endfor %}
+                    </div>                    
                     <a href="/logout" class="logout-btn">✕</a>
                 </div>
             </div>

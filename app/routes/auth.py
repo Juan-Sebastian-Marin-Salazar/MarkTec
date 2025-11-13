@@ -44,7 +44,7 @@ def login():
     flash("Correo o contraseña incorrectos")
     return redirect(url_for("auth.login"))
 
-# ---------- REGISTRO ----------
+# ---------- REGISTRO DE USUARIO ----------
 @bp.route("/registro", methods=["GET", "POST"])
 def registro():
     if request.method == "GET":
@@ -56,9 +56,18 @@ def registro():
     password = request.form.get("password")
     confirm = request.form.get("confirm")
 
+    # Validaciones
+    if not all([nombre, matricula, correo, password, confirm]):
+        flash("Por favor completa todos los campos.")
+        return render_template("user/registro.html")
+
     if password != confirm:
-        flash("Las contraseñas no coinciden")
-        return redirect(url_for("auth.registro"))
+        flash("Las contraseñas no coinciden.")
+        return render_template("user/registro.html")
+
+    if not (correo.endswith("@mexicali.tecnm.mx") or correo.endswith("@itmexicali.edu.mx")):
+        flash("Debes usar un correo institucional válido.")
+        return render_template("user/registro.html")
 
     clave_hash = hashlib.sha256(password.encode()).hexdigest()
 
@@ -66,16 +75,32 @@ def registro():
     cursor = conn.cursor()
 
     try:
+        # Crear usuario
         cursor.execute("""
             INSERT INTO usuarios (nombre, correo, clave_hash, matricula)
             VALUES (%s, %s, %s, %s)
         """, (nombre, correo, clave_hash, matricula))
         conn.commit()
-        flash("Registro exitoso. Inicia sesión.")
+
+        # Obtener ID del nuevo usuario
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        nuevo_id = cursor.fetchone()[0]
+
+        # Asignar rol por defecto 'comprador'
+        cursor.execute("""
+            INSERT INTO usuarios_roles (id_usuario, id_rol)
+            SELECT %s, idRoles FROM roles WHERE nombre_rol = 'comprador'
+        """, (nuevo_id,))
+        conn.commit()
+
+        flash("Registro exitoso. Ahora puedes iniciar sesión.")
         return redirect(url_for("auth.login"))
-    except:
-        flash("El correo ya está registrado.")
-        return redirect(url_for("auth.registro"))
+
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error al registrar usuario: {e}")
+        return render_template("user/registro.html")
+
     finally:
         cursor.close()
         conn.close()
@@ -97,11 +122,9 @@ def enviar_codigo_email(destinatario, codigo):
 
 @bp.route("/verificar-vendedor", methods=["GET", "POST"])
 def verificar_vendedor():
-    # Validar sesión
     if "usuario_id" not in session:
         return redirect(url_for("auth.login"))
 
-    # Obtener correo desde la BD
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT correo FROM usuarios WHERE idUsuarios=%s", (session["usuario_id"],))
@@ -111,52 +134,57 @@ def verificar_vendedor():
 
     correo_usuario = usuario["correo"]
 
-    # Protección contra POST inválidos
-    if request.method == "POST" and \
-       "codigo" not in request.form and \
-       "enviar_codigo" not in request.form:
-        return redirect(url_for("auth.verificar_vendedor"))
-
-    # PRIMERA ETAPA (GET) - Mostrar pantalla inicial
+    # Etapa 1: Mostrar pantalla inicial
     if request.method == "GET":
         return render_template("user/verificacion.html", paso=1, correo=correo_usuario)
 
-    # SEGUNDA ETAPA - Enviar código al correo
+    # Etapa 2: Enviar código al correo
     if request.form.get("enviar_codigo"):
         codigo = str(random.randint(100000, 999999))
         session["codigo_verificacion"] = codigo
-
         enviar_codigo_email(correo_usuario, codigo)
         flash("Código enviado a tu correo.")
-
         return render_template("user/verificacion.html", paso=2, correo=correo_usuario)
 
-    # TERCERA ETAPA - Validar código ingresado
+    # Etapa 3: Validar código ingresado
     codigo_ingresado = request.form.get("codigo")
     codigo_real = session.get("codigo_verificacion")
 
     if codigo_ingresado == codigo_real:
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        # Actualizar estado de verificación
         cursor.execute("""
             UPDATE usuarios
-            SET es_vendedor_verificado=1
-            WHERE idUsuarios=%s
+            SET es_vendedor_verificado = 1
+            WHERE idUsuarios = %s
         """, (session["usuario_id"],))
+
+        # Asignar rol 'vendedor' si aún no lo tiene
+        cursor.execute("""
+            INSERT INTO usuarios_roles (id_usuario, id_rol)
+            SELECT %s, idRoles FROM roles
+            WHERE nombre_rol = 'vendedor'
+            AND idRoles NOT IN (
+                SELECT id_rol FROM usuarios_roles WHERE id_usuario = %s
+            )
+        """, (session["usuario_id"], session["usuario_id"]))
+
         conn.commit()
         cursor.close()
         conn.close()
 
+        # Limpiar sesión temporal
         session.pop("codigo_verificacion", None)
 
         flash("Tu cuenta ha sido verificada como vendedor.")
         return redirect(url_for("auth.home"))
 
-    # Código incorrecto
     flash("El código es incorrecto.")
     return render_template("user/verificacion.html", paso=2, correo=correo_usuario)
 
-# ---------- HOMEPAGE ----------
+# ---------- PÁGINA PRINCIPAL ----------
 @bp.route("/pagina_principar")
 def home():
     if "usuario_id" not in session:
@@ -165,21 +193,36 @@ def home():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
+    # Obtener datos del usuario y todos sus roles
     cursor.execute("""
-        SELECT nombre, matricula, es_vendedor_verificado
-        FROM usuarios
-        WHERE idUsuarios = %s
+        SELECT 
+            u.nombre, 
+            u.matricula, 
+            u.es_vendedor_verificado,
+            GROUP_CONCAT(r.nombre_rol SEPARATOR ', ') AS roles
+        FROM usuarios u
+        LEFT JOIN usuarios_roles ur ON u.idUsuarios = ur.id_usuario
+        LEFT JOIN roles r ON ur.id_rol = r.idRoles
+        WHERE u.idUsuarios = %s
+        GROUP BY u.idUsuarios
     """, (session["usuario_id"],))
-
     usuario = cursor.fetchone()
+
     cursor.close()
     conn.close()
 
+    # Manejar caso sin roles
+    roles_lista = []
+    if usuario and usuario.get("roles"):
+        roles_lista = [r.strip() for r in usuario["roles"].split(",")]
+
+    # Pasar variable para que el HTML detecte si está verificado
     return render_template(
         "user/pagina_principar.html",
         nombre=usuario["nombre"],
         matricula=usuario["matricula"],
-        es_verificado=usuario["es_vendedor_verificado"]
+        roles=roles_lista,
+        es_verificado=usuario["es_vendedor_verificado"] == 1
     )
 
 # ---------- LOGOUT ----------
