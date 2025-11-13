@@ -5,6 +5,7 @@ import smtplib
 from email.mime.text import MIMEText
 import os
 import random
+from werkzeug.utils import secure_filename
 
 bp = Blueprint("auth", __name__)
 
@@ -184,8 +185,86 @@ def verificar_vendedor():
     flash("El código es incorrecto.")
     return render_template("user/verificacion.html", paso=2, correo=correo_usuario)
 
+# ---------- CREAR NUEVA PUBLICACIÓN (PRODUCTO) ----------
+@bp.route("/nuevo-producto", methods=["GET", "POST"])
+def nuevo_producto():
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    if request.method == "GET":
+        return render_template("user/nuevo_producto.html")
+
+    titulo = request.form.get("titulo")
+    descripcion = request.form.get("descripcion")
+    precio = request.form.get("precio")
+    imagenes = request.files.getlist("imagenes")
+
+    if not titulo or not precio:
+        flash("El título y el precio son obligatorios.")
+        return redirect(url_for("auth.nuevo_producto"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1 Insertar la publicación
+    cursor.execute("""
+        INSERT INTO publicaciones (id_vendedor, titulo, descripcion, precio)
+        VALUES (%s, %s, %s, %s)
+    """, (session["usuario_id"], titulo, descripcion, precio))
+    conn.commit()
+    publicacion_id = cursor.lastrowid
+
+    # 2 Procesar las imágenes (si existen)
+    if imagenes:
+        uploads_dir = os.path.join(os.path.dirname(__file__), "..", "static", "uploads")
+        uploads_dir = os.path.abspath(uploads_dir)
+        os.makedirs(uploads_dir, exist_ok=True)
+
+        for i, img in enumerate(imagenes):
+            if img and img.filename:
+                filename = secure_filename(img.filename)
+                ruta_absoluta = os.path.join(uploads_dir, filename)
+                img.save(ruta_absoluta)
+                # Construimos una URL accesible por el navegador: (esto se puede reemplazar luego por un URL remoto tipo S3)
+                url_imagen = f"/static/uploads/{filename}"
+
+                cursor.execute("""
+                    INSERT INTO imagenes_publicacion (id_publicacion, url, texto_alternativo, orden)
+                    VALUES (%s, %s, %s, %s)
+                """, (publicacion_id, url_imagen, titulo, i))
+        conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    flash("Tu publicación ha sido creada correctamente.")
+    return redirect(url_for("auth.home"))
+
+# ---------- ELIMINAR PUBLICACIÓN ----------
+@bp.route("/eliminar-producto/<int:pub_id>", methods=["POST"])
+def eliminar_producto(pub_id):
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Validar que la publicación pertenece al usuario actual
+    cursor.execute("""
+        DELETE FROM publicaciones
+        WHERE idPublicaciones = %s AND id_vendedor = %s
+    """, (pub_id, session["usuario_id"]))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("Publicación eliminada correctamente.")
+    return redirect(url_for("auth.home"))
+
 # ---------- PÁGINA PRINCIPAL ----------
 @bp.route("/pagina_principar")
+@bp.route("/home")  # alias para compatibilidad con url_for("auth.home")
 def home():
     if "usuario_id" not in session:
         return redirect(url_for("auth.login"))
@@ -193,13 +272,10 @@ def home():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Obtener datos del usuario y todos sus roles
+    # Datos del usuario
     cursor.execute("""
-        SELECT 
-            u.nombre, 
-            u.matricula, 
-            u.es_vendedor_verificado,
-            GROUP_CONCAT(r.nombre_rol SEPARATOR ', ') AS roles
+        SELECT u.nombre, u.matricula, u.es_vendedor_verificado,
+               GROUP_CONCAT(r.nombre_rol SEPARATOR ', ') AS roles
         FROM usuarios u
         LEFT JOIN usuarios_roles ur ON u.idUsuarios = ur.id_usuario
         LEFT JOIN roles r ON ur.id_rol = r.idRoles
@@ -208,21 +284,74 @@ def home():
     """, (session["usuario_id"],))
     usuario = cursor.fetchone()
 
+    if not usuario:
+        cursor.close()
+        conn.close()
+        return redirect(url_for("auth.logout"))
+
+    # Cargar todas las publicaciones (para vista cliente)
+    cursor.execute("""
+        SELECT 
+            p.idPublicaciones,
+            p.id_vendedor,
+            p.titulo,
+            p.descripcion,
+            p.precio,
+            u.nombre AS vendedor,
+            i.url AS imagen_url
+        FROM publicaciones p
+        JOIN usuarios u ON p.id_vendedor = u.idUsuarios
+        LEFT JOIN imagenes_publicacion i 
+            ON i.id_publicacion = p.idPublicaciones
+            AND i.orden = (
+                SELECT MIN(orden)
+                FROM imagenes_publicacion
+                WHERE id_publicacion = p.idPublicaciones
+            )
+        WHERE p.eliminado_en IS NULL
+        ORDER BY p.creado_en DESC
+    """)
+    publicaciones_cliente = cursor.fetchall()
+
+    # Cargar solo publicaciones del usuario (vista vendedor)
+    cursor.execute("""
+        SELECT 
+            p.idPublicaciones,
+            p.id_vendedor,
+            p.titulo,
+            p.descripcion,
+            p.precio,
+            u.nombre AS vendedor,
+            i.url AS imagen_url
+        FROM publicaciones p
+        JOIN usuarios u ON p.id_vendedor = u.idUsuarios
+        LEFT JOIN imagenes_publicacion i 
+            ON i.id_publicacion = p.idPublicaciones
+            AND i.orden = (
+                SELECT MIN(orden)
+                FROM imagenes_publicacion
+                WHERE id_publicacion = p.idPublicaciones
+            )
+        WHERE p.eliminado_en IS NULL
+          AND p.id_vendedor = %s
+        ORDER BY p.creado_en DESC
+    """, (session["usuario_id"],))
+    publicaciones_vendedor = cursor.fetchall()
+
     cursor.close()
     conn.close()
 
-    # Manejar caso sin roles
-    roles_lista = []
-    if usuario and usuario.get("roles"):
-        roles_lista = [r.strip() for r in usuario["roles"].split(",")]
+    roles = usuario["roles"].split(", ") if usuario["roles"] else []
+    es_verificado = bool(usuario["es_vendedor_verificado"])
 
-    # Pasar variable para que el HTML detecte si está verificado
     return render_template(
         "user/pagina_principar.html",
         nombre=usuario["nombre"],
         matricula=usuario["matricula"],
-        roles=roles_lista,
-        es_verificado=usuario["es_vendedor_verificado"] == 1
+        roles=roles,
+        es_verificado=es_verificado,
+        publicaciones_cliente=publicaciones_cliente,
+        publicaciones_vendedor=publicaciones_vendedor
     )
 
 # ---------- LOGOUT ----------

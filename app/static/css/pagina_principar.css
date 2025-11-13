@@ -105,6 +105,8 @@ body {
     font-size: 14px;
     color: #4a5568;
     font-weight: 500;
+    gap: 10px;
+    flex-wrap: wrap;    
 }
 
 .user-letter {
@@ -275,23 +277,11 @@ body {
 
 /* #endregion categoria*/
 
-/* .logout-btn {
-    margin-left: 10px;
-    color: #333;
-    font-weight: bold;
-    text-decoration: none;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-.logout-btn:hover {
-    color: red;
-} */
-
 .roles-container {
-    margin-top: 5px;
+    margin-left: 5px;
+    margin-top: 2px;
     display: flex;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
@@ -300,7 +290,7 @@ body {
     border-radius: 10px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #fff;
+    color: #ffffff;
 }
 
 /* Colores distintos por rol */

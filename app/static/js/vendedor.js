@@ -1,148 +1,63 @@
-// vendedor.js - Funcionalidad para el modo vendedor
+// vendedor.js - alternar entre vista cliente y vista vendedor
+// Se encarga únicamente del cambio visual de pantallas, SIN interferir con la verificación del usuario.
+// La verificación se maneja desde manejarBotonVendedor() en el HTML.
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Elementos del DOM
-    const btnCliente = document.querySelector('.cliente');
-    const btnVendedor = document.querySelector('.vendor');
-    const controlesVendedor = document.getElementById('controlesVendedor');
-    const btnAgregarProducto = document.getElementById('btnAgregarProducto');
-    const productos = document.querySelectorAll('.producto');
+document.addEventListener("DOMContentLoaded", function () {
 
-    // Obtener el estado de verificación del data attribute
-    const datosUsuario = document.getElementById('datos-usuario');
-    const esVerificado = datosUsuario ? datosUsuario.getAttribute('data-verificado') === 'true' : false;
+    const btnCliente = document.querySelector(".cliente");
+    const btnVendedor = document.querySelector(".vendor");
 
-    // Inicializar estado - Cliente activo por defecto
-    let modoActual = 'cliente';
+    const vistaCliente = document.getElementById("vistaCliente");
+    const vistaVendedor = document.getElementById("vistaVendedor");
 
-    // Función para cambiar entre modos
-    function cambiarModo(modo) {
-        modoActual = modo;
-        
-        // Remover clase activa de ambos botones primero
-        btnCliente.classList.remove('activo');
-        btnVendedor.classList.remove('activo');
-        
-        if (modo === 'vendedor') {
-            // Verificar si el usuario está verificado antes de cambiar a modo vendedor
-            if (!esVerificado) {
-                window.location.href = "/verificar-vendedor";
-                return;
-            }
-            
-            // Activar modo vendedor
-            btnVendedor.classList.add('activo');
-            
-            // Mostrar controles de vendedor
-            if (controlesVendedor) {
-                controlesVendedor.style.display = 'block';
-            }
-            
-            // Filtrar productos: mostrar solo los propios
-            productos.forEach(producto => {
-                if (producto.classList.contains('mi-producto')) {
-                    // Mostrar productos propios con controles
-                    producto.style.display = 'block';
-                    producto.classList.add('mostrar-controles');
-                } else {
-                    // Ocultar productos de otros vendedores
-                    producto.style.display = 'none';
-                }
-            });
-            
-        } else {
-            // Activar modo cliente
-            btnCliente.classList.add('activo');
-            
-            // Ocultar controles de vendedor
-            if (controlesVendedor) {
-                controlesVendedor.style.display = 'none';
-            }
-            
-            // Mostrar todos los productos
-            productos.forEach(producto => {
-                producto.style.display = 'block';
-                producto.classList.remove('mostrar-controles');
-            });
-        }
+    const controlesVendedor = document.getElementById("controlesVendedor");
+
+    // Si falta algo, no ejecutamos el script
+    if (!btnCliente || !btnVendedor || !vistaCliente || !vistaVendedor) {
+        console.warn("Elementos faltantes en vendedor.js");
+        return;
     }
 
-    // Event listeners para los botones de modo
-    if (btnCliente) {
-        btnCliente.addEventListener('click', function() {
-            cambiarModo('cliente');
-        });
+    // Por defecto: vista Cliente activa
+    mostrarCliente();
+
+    function mostrarCliente() {
+        vistaCliente.style.display = "grid";
+        vistaVendedor.style.display = "none";
+
+        if (controlesVendedor) controlesVendedor.style.display = "none";
+
+        btnCliente.classList.add("activo");
+        btnVendedor.classList.remove("activo");
     }
 
-    if (btnVendedor) {
-        btnVendedor.addEventListener('click', function() {
-            cambiarModo('vendedor');
-        });
+    function mostrarVendedor() {
+        // Aquí NO verificamos permisos.
+        // Si el usuario NO es verificado, el HTML ya lo redirige con manejarBotonVendedor().
+        // Si es verificado, entonces sí mostramos su vista.
+
+        vistaCliente.style.display = "none";
+        vistaVendedor.style.display = "grid";
+
+        if (controlesVendedor) controlesVendedor.style.display = "block";
+
+        btnVendedor.classList.add("activo");
+        btnCliente.classList.remove("activo");
     }
 
-    // Agregar controles a los productos propios
-    productos.forEach((producto, index) => {
-        if (producto.classList.contains('mi-producto')) {
-            // Crear y agregar controles a cada producto propio
-            const controlesProducto = document.createElement('div');
-            controlesProducto.className = 'controles-producto';
-            
-            const btnEditar = document.createElement('button');
-            btnEditar.className = 'btn-editar';
-            btnEditar.textContent = 'Editar';
-            btnEditar.onclick = () => editarProducto(index + 1);
-            
-            const btnEliminar = document.createElement('button');
-            btnEliminar.className = 'btn-eliminar';
-            btnEliminar.textContent = 'Eliminar';
-            btnEliminar.onclick = () => eliminarProducto(index + 1);
-            
-            controlesProducto.appendChild(btnEditar);
-            controlesProducto.appendChild(btnEliminar);
-            producto.appendChild(controlesProducto);
-        }
+    // EVENTOS PARA CAMBIAR DE MODO
+    btnCliente.addEventListener("click", () => {
+        mostrarCliente();
     });
 
-    // Funciones para manejar productos
-    function agregarProducto() {
-        // Verificar nuevamente si está verificado antes de agregar producto
+    btnVendedor.addEventListener("click", () => {
+        const esVerificado = btnVendedor.getAttribute("data-verificado") === "true";
+
         if (!esVerificado) {
-            alert('Debes estar verificado para agregar productos');
-            window.location.href = "/verificar-vendedor";
+            // El HTML ya manda al usuario a /verificar-vendedor
             return;
         }
-        alert('Abriendo formulario para agregar nuevo producto');
-        // Aquí puedes implementar la lógica para agregar producto
-        // Por ejemplo: mostrar un modal, redirigir a formulario, etc.
-    }
 
-    function editarProducto(id) {
-        if (!esVerificado) {
-            alert('Debes estar verificado para editar productos');
-            window.location.href = "/verificar-vendedor";
-            return;
-        }
-        alert(`Editando producto ${id}`);
-        // Aquí puedes implementar la lógica para editar producto
-    }
-
-    function eliminarProducto(id) {
-        if (!esVerificado) {
-            alert('Debes estar verificado para eliminar productos');
-            window.location.href = "/verificar-vendedor";
-            return;
-        }
-        if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-            alert(`Producto ${id} eliminado`);
-            // Aquí puedes implementar la lógica para eliminar producto
-        }
-    }
-
-    // Event listener para agregar producto
-    if (btnAgregarProducto) {
-        btnAgregarProducto.addEventListener('click', agregarProducto);
-    }
-
-    // Inicializar en modo cliente
-    cambiarModo('cliente');
+        mostrarVendedor();
+    });
 });

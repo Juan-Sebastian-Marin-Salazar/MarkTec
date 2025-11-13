@@ -26,7 +26,7 @@
 
             <hr class="divider">
 
-            <form id="product-form" class="product-form">
+            <form id="product-form" class="product-form" method="POST" action="/nuevo-producto" enctype="multipart/form-data">
                 <!-- Sección de imagen -->
                 <section class="form-section">
                     <h2>Imagen del Producto *</h2>
@@ -35,7 +35,7 @@
                             <div class="upload-icon">📷</div>
                             <p class="upload-title">Sube una imagen</p>
                             <p class="upload-subtitle">Formatos: JPG, PNG o WEBP (máx. 5MB)</p>
-                            <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" multiple class="file-input">
+                            <input type="file" id="imageInput" name="imagenes" accept=".jpg,.jpeg,.png,.webp" multiple class="file-input">
                             <label for="imageInput" class="file-label">Seleccionar Archivo</label>
                         </div>
                         <div id="imagePreview" class="image-preview"></div>
@@ -43,11 +43,9 @@
                 </section>
 
                 <hr class="divider">
-
                 <!-- Información del producto -->
                 <section class="form-section">
                     <h2>Información del Producto</h2>
-
                     <!-- Nombre del producto -->
                     <div class="form-group">
                         <label for="productName" class="form-label">
@@ -56,9 +54,11 @@
                         <input 
                             type="text" 
                             id="productName" 
+                            name="titulo"
                             class="form-input"
                             maxlength="100"
                             placeholder="Ej: Tacos al Pastor - Orden de 3"
+                            required
                         >
                         <div class="char-counter">
                             <span id="nameCharCount">0</span>/100 caracteres
@@ -70,7 +70,7 @@
                         <label for="category" class="form-label">
                             Categoría *
                         </label>
-                        <select id="category" class="form-select">
+                        <select id="category" name="categoria" class="form-select">
                             <option value="" disabled selected>Selecciona una categoría</option>
                             <option value="Alimentos">Alimentos</option>
                             <option value="Productos">Productos</option>
@@ -88,10 +88,12 @@
                             <input 
                                 type="number" 
                                 id="price" 
+                                name="precio"
                                 class="form-input price-input"
                                 min="0"
                                 step="0.01"
                                 placeholder="0.00"
+                                required
                             >
                         </div>
                     </div>
@@ -105,9 +107,11 @@
                         </label>
                         <textarea 
                             id="description" 
+                            name="descripcion"
                             class="form-textarea"
                             maxlength="500"
                             placeholder="Describe tu producto detalladamente. Incluye características, ingredientes, especificaciones, etc."
+                            required
                         ></textarea>
                         <div class="char-counter">
                             <span id="descCharCount">0</span>/500 caracteres

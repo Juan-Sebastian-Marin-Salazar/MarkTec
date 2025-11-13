@@ -20,20 +20,21 @@
 }
 
 .btn-agregar {
-    background: #0066CC;
-    color: white;
-    padding: 10px 20px;
+    background: #1A73E8;   /* azul más visible */
+    color: #ffffff;        /* texto blanco fuerte */
+    padding: 12px 22px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
+    font-size: 15px;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .btn-agregar:hover {
-    background: rgba(0, 102, 204, 0.7); /* #0066CC con 70% de opacidad (30% de transparencia) */
+    background: #1669c1;
+    transform: translateY(-2px);
 }
-
 /* Asegurar que los filtros tengan su espacio */
 .filtros-categoria {
     display: flex;
@@ -99,4 +100,13 @@
 
 .btn-eliminar:hover {
     background: #e53e3e;
+}
+/* Forzar estilo del botón "Agregar Producto" */
+a.btn-agregar,
+a.btn-agregar:link,
+a.btn-agregar:visited,
+a.btn-agregar:hover,
+a.btn-agregar:active {
+    color: #ffffff !important;
+    text-decoration: none !important;
 }
