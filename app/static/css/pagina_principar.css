@@ -275,7 +275,7 @@ body {
 
 /* #endregion categoria*/
 
-.logout-btn {
+/* .logout-btn {
     margin-left: 10px;
     color: #333;
     font-weight: bold;
@@ -286,4 +286,51 @@ body {
 
 .logout-btn:hover {
     color: red;
+} */
+
+.roles-container {
+    margin-top: 5px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* Colores distintos por rol */
+.badge-comprador {
+    background-color: #3498db; /* azul */
+}
+
+.badge-vendedor {
+    background-color: #27ae60; /* verde */
+}
+
+.badge-administrador {
+    background-color: #c0392b; /* rojo */
+}
+
+.badge-moderador {
+    background-color: #9b59b6; /* morado */
+}
+
+.badge-soporte {
+    background-color: #f39c12; /* naranja */
+}
+
+/* Logout */
+.logout-btn {
+    margin-left: 20px;
+    color: #c0392b;
+    font-weight: bold;
+    text-decoration: none;
+}
+.logout-btn:hover {
+    text-decoration: underline;
 }
