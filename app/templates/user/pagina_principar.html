@@ -18,19 +18,18 @@
                 <h2 class="titulo">MarketPlace</h2>
                 <div class="search-container">
                     <span class="search-icon"></span>
-                    <input type="text" class="search-input" placeholder="Buscar productos...">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar productos...">
                 </div>
             </div>
             <div class="right-section">
                 <div class="user-info">
                     <span class="user-letter">{{ nombre }}</span>
                     <span>{{ matricula }}</span>
-                    <!-- Mostrar todos los roles del usuario -->
                     <div class="roles-container">
                         {% for rol in roles %}
                             <span class="badge badge-{{ rol|lower }}">{{ rol|capitalize }}</span>
                         {% endfor %}
-                    </div>                    
+                    </div>                    
                     <a href="/logout" class="logout-btn">✕</a>
                 </div>
             </div>
@@ -53,83 +52,31 @@
             </div>
         </div>
 
-            <div class="categoria">
-                <div class="tipo_categoria">
-                    <div class="categoria-header">
-                        <h1 class="sub_titulo">Explora Producto</h1>
-                        <div class="controles-vendedor" id="controlesVendedor">
-                            <button class="btn-agregar" id="btnAgregarProducto">
-                                <a href="/nuebo_producto">+ Agregar Producto</a></button>
-                        </div>
-                    </div>
-                    <div class="filtros-categoria">
-                        <div class="filtro activo">Todos</div>
-                        <div class="filtro">Alimentos</div>
-                        <div class="filtro">Productos</div>
-                        <div class="filtro">Servicios</div>
+        <div class="categoria">
+            <div class="tipo_categoria">
+                <div class="categoria-header">
+                    <h1 class="sub_titulo">Explora Producto</h1>
+                    <div class="controles-vendedor" id="controlesVendedor">
+                        <button class="btn-agregar" id="btnAgregarProducto">
+                            <a href="/nuebo_producto">+ Agregar Producto</a></button>
                     </div>
                 </div>
-
-
-                <div class="contenido_categoria">
-                    <div class="producto">
-                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+1" alt="Producto 1">
-                        <p class="nombre_v detalle">Nombre de vendedor</p>
-                        <p class="nombre_p">Nombre de producto</p>
-                        <p class="descripcion detalle">Descripción breve del producto </p>
-                        <p class="precio detalle">Precio</p>
-                    </div>
-                    <div class="producto">
-                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+2" alt="Producto 2">
-                        <p class="nombre_v detalle">Nombre de vendedor</p>
-                        <p class="nombre_p">Nombre de producto</p>
-                        <p class="descripcion detalle">Descripción breve del producto </p>
-                        <p class="precio detalle">Precio</p>
-                    </div>
-                    <div class="producto">
-                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+3" alt="Producto 3">
-                        <p class="nombre_v detalle">Nombre de vendedor</p>
-                        <p class="nombre_p">Nombre de producto</p>
-                        <p class="descripcion detalle">Descripción breve del producto </p>
-                        <p class="precio detalle">Precio</p>
-                    </div>
-                    <div class="producto">
-                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+4" alt="Producto 4">
-                        <p class="nombre_v detalle">Nombre de vendedor</p>
-                        <p class="nombre_p">Nombre de producto</p>
-                        <p class="descripcion detalle">Descripción breve del producto </p>
-                        <p class="precio detalle">Precio</p>
-                    </div>
-                    <div class="producto mi-producto" data-vendedor="propio">
-                        <img src="https://via.placeholder.com/200x150/4299e1/fff?text=Mi+Producto" alt="Mi Producto 1">
-                        <p class="nombre_v detalle">Tú</p>
-                        <p class="nombre_p">Mi Producto 1</p>
-                        <p class="descripcion detalle">Este es mi producto </p>
-                        <p class="precio detalle">$15.00</p>
-                    </div>
-
-                    <div class="producto" data-vendedor="otro">
-                        <img src="https://via.placeholder.com/200x150/555/fff?text=Producto+2" alt="Producto 2">
-                        <p class="nombre_v detalle">Vendedor Externo 2</p>
-                        <p class="nombre_p">Otro Producto</p>
-                        <p class="descripcion detalle">Descripción breve del producto </p>
-                        <p class="precio detalle">$30.00</p>
-                    </div>
-
-                    <div class="producto mi-producto" data-vendedor="propio">
-                        <img src="https://via.placeholder.com/200x150/4299e1/fff?text=Mi+Producto" alt="Mi Producto 2">
-                        <p class="nombre_v detalle">Tú</p>
-                        <p class="nombre_p">Mi Producto 2</p>
-                        <p class="descripcion detalle">Este es otro de mis productos </p>
-                        <p class="precio detalle">$20.00</p>
-                    </div>
+                <div class="filtros-categoria" id="filtrosCategoria">
+                    <div class="filtro activo" data-category="">Todos</div>
+                    <div class="filtro" data-category="Comida">Alimentos</div>
+                    <div class="filtro" data-category="Productos">Productos</div>
+                    <div class="filtro" data-category="Servicios">Servicios</div>
                 </div>
-
             </div>
+
+            <div class="contenido_categoria" id="product-list-container">
+                </div>
+
         </div>
     </div>
 
     <script>
+        // Función original de tu HTML
         function manejarBotonVendedor(boton) {
             const esVerificado = boton.getAttribute('data-verificado') === 'true';
 
@@ -141,6 +88,93 @@
                 // Tus funciones para vendedores aquí
             }
         }
+        
+        // --- 3. NUEVA LÓGICA DE FILTRADO DE PRODUCTOS (Tarea de Sebastián) ---
+        const API_BASE_URL = 'http://127.0.0.1:5000/api/publicaciones';
+
+        // Dibuja los productos en el contenedor
+        function renderProducts(productos) {
+            const container = document.getElementById('product-list-container');
+            if (!container) return;
+            container.innerHTML = ''; // Limpia el contenido anterior
+
+            if (productos.length === 0) {
+                container.innerHTML = '<p style="text-align: center; padding: 20px;">No se encontraron productos en esta categoría.</p>';
+                return;
+            }
+
+            productos.forEach(p => {
+                // Crea una tarjeta del producto usando la misma estructura y clases que tenías antes
+                const productDiv = document.createElement('div');
+                // Asumimos que la API devuelve un campo 'nombre_vendedor' y 'nombre_categoria'
+                productDiv.className = 'producto'; 
+                productDiv.innerHTML = `
+                    <img src="https://via.placeholder.com/200x150/4299e1/fff?text=${p.titulo.substring(0, 15)}" alt="${p.titulo}">
+                    <p class="nombre_v detalle">${p.nombre_vendedor || 'Vendedor Desconocido'}</p>
+                    <p class="nombre_p">${p.titulo}</p>
+                    <p class="descripcion detalle">${p.descripcion || 'Sin descripción'}</p>
+                    <p class="precio detalle">$${p.precio}</p>
+                    <p class="categoria-badge">${p.nombre_categoria}</p>
+                `;
+                container.appendChild(productDiv);
+            });
+        }
+
+        // Llama a la API con o sin filtro de categoría
+        function fetchProducts(category = '') {
+            let url = API_BASE_URL;
+            if (category) {
+                url = `${API_BASE_URL}?categoria=${category}`;
+            }
+
+            // Muestra un mensaje de carga mientras espera
+            document.getElementById('product-list-container').innerHTML = '<p style="text-align: center; padding: 20px;">Cargando productos...</p>';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al obtener datos: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        renderProducts(data.data);
+                    } else {
+                        throw new Error(data.message || 'Respuesta de API fallida.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener productos:', error);
+                    document.getElementById('product-list-container').innerHTML = `<p style="text-align: center; padding: 20px; color: red;">Error al cargar productos: ${error.message}</p>`;
+                });
+        }
+        
+        // Asignación de Event Listeners al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            const filtrosContainer = document.getElementById('filtrosCategoria');
+            
+            // Usamos la delegación de eventos: un solo listener para todos los clics en el contenedor de filtros
+            if (filtrosContainer) {
+                filtrosContainer.addEventListener('click', (event) => {
+                    const filtroElement = event.target.closest('.filtro');
+                    if (filtroElement) {
+                        const category = filtroElement.getAttribute('data-category');
+                        
+                        // Remueve la clase 'activo' de todos los filtros
+                        document.querySelectorAll('.filtro').forEach(el => el.classList.remove('activo'));
+                        // Añade la clase 'activo' solo al filtro clickeado
+                        filtroElement.classList.add('activo');
+                        
+                        // Ejecuta la llamada a la API
+                        fetchProducts(category);
+                    }
+                });
+            }
+            
+            // Carga inicial: Mostrar todos los productos al abrir la página
+            fetchProducts('');
+        });
     </script>
     <script src="../../static/js/vendedor.js"></script>
 </body>
