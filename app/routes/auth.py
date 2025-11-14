@@ -191,22 +191,39 @@ def nuevo_producto():
     if "usuario_id" not in session:
         return redirect(url_for("auth.login"))
 
+    # ==== GET: Cargar categorías desde SQL ====
     if request.method == "GET":
-        return render_template("user/nuevo_producto.html")
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
 
+        cursor.execute("""
+            SELECT idCategorias, nombre_categoria
+            FROM categorias
+            WHERE esta_activa = 1
+            ORDER BY nombre_categoria
+        """)
+        categorias = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return render_template("user/nuevo_producto.html", categorias=categorias)
+
+    # ==== POST: Crear publicación ====
     titulo = request.form.get("titulo")
     descripcion = request.form.get("descripcion")
     precio = request.form.get("precio")
+    categoria_id = request.form.get("categoria")
     imagenes = request.files.getlist("imagenes")
 
-    if not titulo or not precio:
-        flash("El título y el precio son obligatorios.")
+    if not titulo or not precio or not categoria_id:
+        flash("Título, precio y categoría son obligatorios.")
         return redirect(url_for("auth.nuevo_producto"))
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1 Insertar la publicación
+    # 1. Insertar la publicación
     cursor.execute("""
         INSERT INTO publicaciones (id_vendedor, titulo, descripcion, precio)
         VALUES (%s, %s, %s, %s)
@@ -214,10 +231,16 @@ def nuevo_producto():
     conn.commit()
     publicacion_id = cursor.lastrowid
 
-    # 2 Procesar las imágenes (si existen)
+    # 2. Guardar categoría en tabla puente
+    cursor.execute("""
+        INSERT INTO publicaciones_categoria (id_publicacion, id_categoria)
+        VALUES (%s, %s)
+    """, (publicacion_id, categoria_id))
+    conn.commit()
+
+    # 3. Guardar imágenes localmente
     if imagenes:
-        uploads_dir = os.path.join(os.path.dirname(__file__), "..", "static", "uploads")
-        uploads_dir = os.path.abspath(uploads_dir)
+        uploads_dir = os.path.join(os.getcwd(), "app", "static", "uploads")
         os.makedirs(uploads_dir, exist_ok=True)
 
         for i, img in enumerate(imagenes):
@@ -225,7 +248,7 @@ def nuevo_producto():
                 filename = secure_filename(img.filename)
                 ruta_absoluta = os.path.join(uploads_dir, filename)
                 img.save(ruta_absoluta)
-                # Construimos una URL accesible por el navegador: (esto se puede reemplazar luego por un URL remoto tipo S3)
+
                 url_imagen = f"/static/uploads/{filename}"
 
                 cursor.execute("""
@@ -269,6 +292,8 @@ def home():
     if "usuario_id" not in session:
         return redirect(url_for("auth.login"))
 
+    categoria_filtro = request.args.get("categoria")  # puede ser None
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -289,16 +314,25 @@ def home():
         conn.close()
         return redirect(url_for("auth.logout"))
 
-    # Cargar todas las publicaciones (para vista cliente)
+    # === CARGAR CATEGORÍAS ACTIVAS ===
     cursor.execute("""
+        SELECT idCategorias, nombre_categoria
+        FROM categorias
+        WHERE esta_activa = 1
+        ORDER BY nombre_categoria
+    """)
+    categorias = cursor.fetchall()
+
+    # === CONSULTA BASE PARA PUBLICACIONES ===
+    base_query = """
         SELECT 
             p.idPublicaciones,
-            p.id_vendedor,
             p.titulo,
             p.descripcion,
             p.precio,
             u.nombre AS vendedor,
-            i.url AS imagen_url
+            i.url AS imagen_url,
+            pc.id_categoria
         FROM publicaciones p
         JOIN usuarios u ON p.id_vendedor = u.idUsuarios
         LEFT JOIN imagenes_publicacion i 
@@ -308,34 +342,35 @@ def home():
                 FROM imagenes_publicacion
                 WHERE id_publicacion = p.idPublicaciones
             )
+        LEFT JOIN publicaciones_categoria pc
+            ON pc.id_publicacion = p.idPublicaciones
         WHERE p.eliminado_en IS NULL
-        ORDER BY p.creado_en DESC
-    """)
+    """
+
+    filtros = []
+    params = []
+
+    # Si hay categoría seleccionada → filtrar
+    if categoria_filtro:
+        filtros.append("pc.id_categoria = %s")
+        params.append(categoria_filtro)
+
+    # Cliente ve todas
+    query_cliente = base_query + (" AND " + " AND ".join(filtros) if filtros else "") + " ORDER BY p.creado_en DESC"
+
+    cursor.execute(query_cliente, params)
     publicaciones_cliente = cursor.fetchall()
 
-    # Cargar solo publicaciones del usuario (vista vendedor)
-    cursor.execute("""
-        SELECT 
-            p.idPublicaciones,
-            p.id_vendedor,
-            p.titulo,
-            p.descripcion,
-            p.precio,
-            u.nombre AS vendedor,
-            i.url AS imagen_url
-        FROM publicaciones p
-        JOIN usuarios u ON p.id_vendedor = u.idUsuarios
-        LEFT JOIN imagenes_publicacion i 
-            ON i.id_publicacion = p.idPublicaciones
-            AND i.orden = (
-                SELECT MIN(orden)
-                FROM imagenes_publicacion
-                WHERE id_publicacion = p.idPublicaciones
-            )
-        WHERE p.eliminado_en IS NULL
-          AND p.id_vendedor = %s
-        ORDER BY p.creado_en DESC
-    """, (session["usuario_id"],))
+    # Vendedor ve solo las suyas
+    filtros_vend = filtros.copy()
+    params_vend = params.copy()
+
+    filtros_vend.append("p.id_vendedor = %s")
+    params_vend.append(session["usuario_id"])
+
+    query_vendedor = base_query + " AND " + " AND ".join(filtros_vend) + " ORDER BY p.creado_en DESC"
+
+    cursor.execute(query_vendedor, params_vend)
     publicaciones_vendedor = cursor.fetchall()
 
     cursor.close()
@@ -350,6 +385,8 @@ def home():
         matricula=usuario["matricula"],
         roles=roles,
         es_verificado=es_verificado,
+        categorias=categorias,
+        categoria_filtro=categoria_filtro,
         publicaciones_cliente=publicaciones_cliente,
         publicaciones_vendedor=publicaciones_vendedor
     )

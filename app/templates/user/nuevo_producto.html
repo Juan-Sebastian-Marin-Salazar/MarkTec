@@ -70,11 +70,11 @@
                         <label for="category" class="form-label">
                             Categoría *
                         </label>
-                        <select id="category" name="categoria" class="form-select">
+                        <select id="category" name="categoria" class="form-select" required>
                             <option value="" disabled selected>Selecciona una categoría</option>
-                            <option value="Alimentos">Alimentos</option>
-                            <option value="Productos">Productos</option>
-                            <option value="Servicios">Servicios</option>
+                            {% for cat in categorias %}
+                                <option value="{{ cat.idCategorias }}">{{ cat.nombre_categoria }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 

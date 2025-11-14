@@ -5,16 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Tienda Online</title>
+
     <!-- Estilos -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pagina_principar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/vendedor.css') }}">
 </head>
 
-<body>
+<body data-filtro="{{ categoria_filtro }}">
     <div class="page">
+
         <!-- Datos del usuario (oculto para JS) -->
-        <div id="datos-usuario" data-verificado="{{ 'true' if es_verificado else 'false' }}" style="display: none;"></div>
+        <div id="datos-usuario" data-verificado="{{ 'true' if es_verificado else 'false' }}" style="display:none;"></div>
 
         <!-- HEADER -->
         <div class="header">
@@ -68,6 +70,7 @@
         <!-- CONTENIDO -->
         <div class="categoria">
             <div class="tipo_categoria">
+
                 <div class="categoria-header">
                     <h1 class="sub_titulo">Explora Productos</h1>
 
@@ -76,11 +79,25 @@
                     </div>
                 </div>
 
+                <!-- FILTROS DINÁMICOS -->
                 <div class="filtros-categoria">
-                    <div class="filtro activo">Todos</div>
-                    <div class="filtro">Alimentos</div>
-                    <div class="filtro">Productos</div>
-                    <div class="filtro">Servicios</div>
+
+                    <!-- BOTÓN TODOS -->
+                    <a 
+                        href="/pagina_principar"
+                        class="filtro {% if not categoria_filtro %}activo{% endif %}">
+                        Todos
+                    </a>
+
+                    <!-- CATEGORÍAS DINÁMICAS DESDE SQL -->
+                    {% for cat in categorias %}
+                        <a href="/pagina_principar?categoria={{ cat.idCategorias }}"
+                           class="filtro {% if categoria_filtro and categoria_filtro|int == cat.idCategorias %}activo{% endif %}"
+                           data-id="{{ cat.idCategorias }}">
+                           {{ cat.nombre_categoria }}
+                        </a>
+                    {% endfor %}
+
                 </div>
             </div>
 
@@ -122,6 +139,7 @@
                     <p class="no-publicaciones">Aún no has publicado ningún producto.</p>
                 {% endif %}
             </div>
+
         </div>
     </div>
 
@@ -134,8 +152,18 @@
                 window.location.href = "/verificar-vendedor";
             }
         }
-    </script>
 
+        // RESALTAR FILTRO ACTIVO (por backend ya resalta, esto es extra)
+        document.addEventListener("DOMContentLoaded", () => {
+            const filtroActual = document.body.getAttribute("data-filtro");
+
+            document.querySelectorAll(".filtro").forEach(btn => {
+                if (btn.dataset.id === filtroActual) {
+                    btn.classList.add("activo");
+                }
+            });
+        });
+    </script>
     <script src="{{ url_for('static', filename='js/vendedor.js') }}"></script>
 </body>
 </html>

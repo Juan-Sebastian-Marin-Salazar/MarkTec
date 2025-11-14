@@ -97,26 +97,45 @@ CREATE TABLE IF NOT EXISTS imagenes_publicacion (
 
 CREATE INDEX idx_imagenes_publicacion ON imagenes_publicacion(id_publicacion);
 
--- ===== ETIQUETAS =====
-CREATE TABLE IF NOT EXISTS etiquetas (
-  idEtiquetas INT AUTO_INCREMENT PRIMARY KEY,
-  nombre_etiqueta VARCHAR(150) NOT NULL,
-  slug VARCHAR(150) NOT NULL,
+-- ===== CATEGORIAS =====
+CREATE TABLE IF NOT EXISTS categorias (
+  idCategorias INT AUTO_INCREMENT PRIMARY KEY,
+  nombre_categoria VARCHAR(150) NOT NULL,
   id_creador INT NULL,
   esta_activa TINYINT(1) DEFAULT 1,
   creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY ux_etiquetas_slug (slug),
   CONSTRAINT fk_etiquetas_creador FOREIGN KEY (id_creador) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===== PUBLICACIONES_ETIQUETAS =====
-CREATE TABLE IF NOT EXISTS publicaciones_etiquetas (
+-- ===== PUBLICACIONES_CATEGORIAS =====
+CREATE TABLE IF NOT EXISTS publicaciones_categoria (
   id_publicacion INT NOT NULL,
-  id_etiqueta INT NOT NULL,
-  PRIMARY KEY (id_publicacion, id_etiqueta),
+  id_categoria INT NOT NULL,
+  PRIMARY KEY (id_publicacion, id_categoria),
   CONSTRAINT fk_pe_publicacion FOREIGN KEY (id_publicacion) REFERENCES publicaciones(idPublicaciones) ON DELETE CASCADE,
-  CONSTRAINT fk_pe_etiqueta FOREIGN KEY (id_etiqueta) REFERENCES etiquetas(idEtiquetas) ON DELETE CASCADE
+  CONSTRAINT fk_pe_categoria FOREIGN KEY (id_categoria) REFERENCES categorias(idCategorias) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- ===== ETIQUETAS =====
+-- CREATE TABLE IF NOT EXISTS etiquetas (
+--   idEtiquetas INT AUTO_INCREMENT PRIMARY KEY,
+--   nombre_etiqueta VARCHAR(150) NOT NULL,
+--   slug VARCHAR(150) NOT NULL,
+--   id_creador INT NULL,
+--   esta_activa TINYINT(1) DEFAULT 1,
+--   creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--   UNIQUE KEY ux_etiquetas_slug (slug),
+--   CONSTRAINT fk_etiquetas_creador FOREIGN KEY (id_creador) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- ===== PUBLICACIONES_ETIQUETAS =====
+-- CREATE TABLE IF NOT EXISTS publicaciones_etiquetas (
+--   id_publicacion INT NOT NULL,
+--   id_etiqueta INT NOT NULL,
+--   PRIMARY KEY (id_publicacion, id_etiqueta),
+--   CONSTRAINT fk_pe_publicacion FOREIGN KEY (id_publicacion) REFERENCES publicaciones(idPublicaciones) ON DELETE CASCADE,
+--   CONSTRAINT fk_pe_etiqueta FOREIGN KEY (id_etiqueta) REFERENCES etiquetas(idEtiquetas) ON DELETE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ===== CONVERSACIONES =====
 CREATE TABLE IF NOT EXISTS conversaciones (
@@ -208,12 +227,16 @@ INSERT INTO roles (nombre_rol, tipo_rol, descripcion) VALUES
 ('comprador','regular','Usuario que compra')
 ON DUPLICATE KEY UPDATE nombre_rol = VALUES(nombre_rol);
 
-INSERT INTO etiquetas (nombre_etiqueta, slug, id_creador, esta_activa) VALUES
-('Libros','libros', NULL, 1),
-('Muebles','muebles', NULL, 1),
-('Ropa','ropa', NULL, 1),
-('Cursos / Clases','cursos', NULL, 1),
-('Electronica','electronica', NULL, 1)
-ON DUPLICATE KEY UPDATE nombre_etiqueta = VALUES(nombre_etiqueta);
+-- INSERT INTO etiquetas (nombre_etiqueta, slug, id_creador, esta_activa) VALUES
+-- ('Libros','libros', NULL, 1),
+-- ('Muebles','muebles', NULL, 1),
+-- ('Ropa','ropa', NULL, 1),
+-- ('Cursos / Clases','cursos', NULL, 1),
+-- ('Electronica','electronica', NULL, 1)
+-- ON DUPLICATE KEY UPDATE nombre_etiqueta = VALUES(nombre_etiqueta);
+
+INSERT INTO categorias (nombre_categoria, id_creador, esta_activa) VALUES ('Alimentos', NULL, 1);
+INSERT INTO categorias (nombre_categoria, id_creador, esta_activa) VALUES ('Productos', NULL, 1);
+INSERT INTO categorias (nombre_categoria, id_creador, esta_activa) VALUES ('Servicios', NULL, 1);
 
 SET SQL_MODE=@OLD_SQL_MODE;
