@@ -22,10 +22,12 @@
         <div class="header">
             <div class="left-section">
                 <h2 class="titulo">MarketPlace</h2>
-                <div class="search-container">
+                <div class="search-container" style="position:relative;">
                     <span class="search-icon"></span>
-                    <input type="text" class="search-input" placeholder="Buscar productos...">
-                </div>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Buscar productos..." autocomplete="off" />
+                    <!-- Dropdown de resultados -->
+                <div id="searchResults" class="search-results oculto" aria-hidden="true"></div>
+</div>
             </div>
 
             <div class="right-section">
@@ -164,6 +166,9 @@
             });
         });
     </script>
+    <script src="{{ url_for('static', filename='js/vendedor.js') }}"></script>
+    <!-- SCRIPTS -->
+    <script src="{{ url_for('static', filename='js/buscar_local.js') }}"></script>        
     <script src="{{ url_for('static', filename='js/vendedor.js') }}"></script>
 </body>
 </html>
