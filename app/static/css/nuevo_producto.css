@@ -105,6 +105,7 @@
     margin-bottom: 10px;
 }
 
+
 .upload-area {
     border: 2px dashed #cbd5e0;
     border-radius: 8px;
@@ -296,12 +297,12 @@
 }
 
 .submit-btn {
-    background: #48bb78;
+  background: #4299e1;
     color: white;
 }
 
 .submit-btn:hover {
-    background: #38a169;
+    background: #3182ce;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
 }

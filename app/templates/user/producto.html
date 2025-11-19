@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketPlace</title>
+    <link rel="stylesheet" href="../../static/css/producto.css">
+</head>
+
+<body>
+        <header class="fixed-header">
+        <div class="header-content">
+            <button class="back-button" onclick="window.history.back()">
+                <span>←</span>
+            </button>
+            <h1>Volver</h1>
+        </div>
+    </header>
+    
+    <div class="producto-container">
+        <div class="producto-content">
+            <!-- Columna izquierda: Imagen del producto -->
+            <div class="producto-imagen">
+                <div class="imagen-principal">
+                    <img src="{{ pub.imagen_url or '/static/img/default.png' }}"
+                        alt="{{ pub.titulo }}">
+                </div>
+                <div class="imagenes-secundarias">
+                    <div class="imagen-miniatura activa">
+                        <img src="{{ pub.imagen_url or '/static/img/default.png' }}"
+                            alt="{{ pub.titulo }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna derecha: Información del producto -->
+            <div class="producto-info">
+                <h1 class="producto-titulo">{{ pub.titulo }}</h1>
+                <div class="precio">${{ "%.2f"|format(pub.precio) }}</div>
+
+                <div class="descripcion">
+                    <h3>Descripción</h3>
+                    <p>{{ pub.descripcion or 'Sin descripción' }}</p>
+                </div>
+
+            </div>
+        </div>
+
+        <script src="producto.js"></script>
+</body>
+
+</html>
