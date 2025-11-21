@@ -1,53 +1,68 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarketPlace</title>
-    <link rel="stylesheet" href="../../static/css/producto.css">
+    <title>{{ producto.titulo }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/producto.css') }}">
 </head>
-
 <body>
-        <header class="fixed-header">
+    <!-- HEADER FIJO -->
+    <header class="fixed-header">
         <div class="header-content">
-            <button class="back-button" onclick="window.history.back()">
-                <span>←</span>
-            </button>
-            <h1>Volver</h1>
+            <button class="back-button" onclick="window.history.back()"><~</button>
+            <h1>{{ producto.titulo }}</h1>
         </div>
     </header>
-    
+
     <div class="producto-container">
         <div class="producto-content">
-            <!-- Columna izquierda: Imagen del producto -->
+            <!-- IMÁGENES -->
             <div class="producto-imagen">
                 <div class="imagen-principal">
-                    <img src="{{ pub.imagen_url or '/static/img/default.png' }}"
-                        alt="{{ pub.titulo }}">
+                    <img id="mainImage"
+                         src="{{ imagenes[0].url if imagenes else '/static/img/default.png' }}"
+                         alt="Imagen principal">
                 </div>
+
+                {% if imagenes %}
                 <div class="imagenes-secundarias">
-                    <div class="imagen-miniatura activa">
-                        <img src="{{ pub.imagen_url or '/static/img/default.png' }}"
-                            alt="{{ pub.titulo }}">
+                    {% for img in imagenes %}
+                    <div class="imagen-miniatura" onclick="cambiarImagen('{{ img.url }}', this)">
+                        <img src="{{ img.url }}">
                     </div>
+                    {% endfor %}
                 </div>
+                {% endif %}
             </div>
-
-            <!-- Columna derecha: Información del producto -->
+            <!-- INFORMACIÓN -->
             <div class="producto-info">
-                <h1 class="producto-titulo">{{ pub.titulo }}</h1>
-                <div class="precio">${{ "%.2f"|format(pub.precio) }}</div>
-
+                <h2 class="producto-titulo">{{ producto.titulo }}</h2>
+                <p class="precio">${{ "%.2f"|format(producto.precio) }}</p>
                 <div class="descripcion">
                     <h3>Descripción</h3>
-                    <p>{{ pub.descripcion or 'Sin descripción' }}</p>
+                    <p>{{ producto.descripcion or "Sin descripción disponible" }}</p>
                 </div>
-
+                <div class="caracteristicas">
+                    <h3>Vendedor</h3>
+                    <ul>
+                        <li>{{ producto.vendedor }}</li>
+                    </ul>
+                </div>
             </div>
         </div>
+    </div>
 
-        <script src="producto.js"></script>
+    <script>
+        function cambiarImagen(url, elemento) {
+            document.getElementById("mainImage").src = url;
+
+            document.querySelectorAll(".imagen-miniatura")
+                .forEach(div => div.classList.remove("activa"));
+
+            elemento.classList.add("activa");
+        }
+    </script>
 </body>
-
 </html>

@@ -26,8 +26,8 @@
                     <span class="search-icon"></span>
                     <input type="text" id="searchInput" class="search-input" placeholder="Buscar productos..." autocomplete="off" />
                     <!-- Dropdown de resultados -->
-                <div id="searchResults" class="search-results oculto" aria-hidden="true"></div>
-</div>
+                    <div id="searchResults" class="search-results oculto" aria-hidden="true"></div>
+                </div>
             </div>
 
             <div class="right-section">
@@ -42,7 +42,7 @@
                         {% endfor %}
                     </div>
 
-                    <a href="/logout" class="logout-btn">✕</a>
+                    <a href="/logout" class="logout-btn">CrrSes</a>
                 </div>
             </div>
         </div>
@@ -107,7 +107,7 @@
             <div class="contenido_categoria" id="vistaCliente">
                 {% if publicaciones_cliente %}
                     {% for pub in publicaciones_cliente %}
-                    <div class="producto">
+                    <div class="producto" onclick="window.location='/producto/{{ pub.idPublicaciones }}'">
                         <img src="{{ pub.imagen_url or '/static/img/default.png' }}" alt="{{ pub.titulo }}">
                         <p class="nombre_v detalle">{{ pub.vendedor }}</p>
                         <p class="nombre_p">{{ pub.titulo }}</p>
@@ -166,7 +166,6 @@
             });
         });
     </script>
-    <script src="{{ url_for('static', filename='js/vendedor.js') }}"></script>
     <!-- SCRIPTS -->
     <script src="{{ url_for('static', filename='js/buscar_local.js') }}"></script>        
     <script src="{{ url_for('static', filename='js/vendedor.js') }}"></script>

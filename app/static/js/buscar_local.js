@@ -153,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Clic fuera → cerrar dropdown
+    // Clic fuera ~> cerrar dropdown
     document.addEventListener("click", (e) => {
         if (!resultsBox.contains(e.target) && e.target !== input) {
             hideDropdown();

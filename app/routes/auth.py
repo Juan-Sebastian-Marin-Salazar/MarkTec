@@ -263,6 +263,49 @@ def nuevo_producto():
     flash("Tu publicación ha sido creada correctamente.")
     return redirect(url_for("auth.home"))
 
+# ---------- DETALLE PUBLICACIÓN (PRODUCTO) ----------
+@bp.route("/producto/<int:pub_id>")
+def detalle_producto(pub_id):
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Obtener datos del producto
+    cursor.execute("""
+        SELECT p.*, u.nombre AS vendedor
+        FROM publicaciones p
+        JOIN usuarios u ON p.id_vendedor = u.idUsuarios
+        WHERE p.idPublicaciones = %s
+    """, (pub_id,))
+    producto = cursor.fetchone()
+
+    if not producto:
+        cursor.close()
+        conn.close()
+        return "Producto no encontrado", 404
+
+    # Obtener imágenes (ordenadas)
+    cursor.execute("""
+        SELECT url 
+        FROM imagenes_publicacion
+        WHERE id_publicacion = %s
+        ORDER BY orden ASC
+    """, (pub_id,))
+    imagenes = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "user/producto.html",
+        producto=producto,
+        imagenes=imagenes
+    )
+
+# ---------- EDITAR PUBLICACION (PRODUCTO) ----------
+
 # ---------- ELIMINAR PUBLICACIÓN ----------
 @bp.route("/eliminar-producto/<int:pub_id>", methods=["POST"])
 def eliminar_producto(pub_id):
@@ -350,7 +393,7 @@ def home():
     filtros = []
     params = []
 
-    # Si hay categoría seleccionada → filtrar
+    # Si hay categoría seleccionada ~> filtrar
     if categoria_filtro:
         filtros.append("pc.id_categoria = %s")
         params.append(categoria_filtro)
