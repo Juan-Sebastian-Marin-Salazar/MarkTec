@@ -457,7 +457,7 @@ def mis_transacciones():
     return render_template("user/mis_transacciones.html", transacciones=transacciones)
 
 # ---------- PÁGINA PRINCIPAL ----------
-@bp.route("/pagina_principal")
+@bp.route("/pagina_principar")
 @bp.route("/home")  # alias para compatibilidad con url_for("auth.home")
 def home():
     if "usuario_id" not in session:
