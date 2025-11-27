@@ -22,6 +22,7 @@
     font-weight: 600;
     color: #2d3748;
 }
+
 .back-button {
     background: none;
     border: none;
@@ -34,7 +35,8 @@
 }
 
 .back-button:hover {
-    background-color: #f1f5f9;
+    color: #ffff;
+    background-color: #4299e1;
 }
 
 
@@ -58,20 +60,20 @@
 /* CONTENEDOR PADRE */
 .producto-imagen {
     flex: 1;
-    min-width: 300px; 
+    min-width: 300px;
     max-width: 100%;
 }
 
 /* IMAGEN GRANDE */
 .imagen-principal {
     width: 100%;
-    aspect-ratio: 4 / 3; 
-    
+    aspect-ratio: 4 / 3;
+
     overflow: hidden;
     border-radius: 8px;
     margin-bottom: 20px;
-    background-color: #f8f9fa; 
-    border: 1px solid #e2e8f0; 
+    background-color: #f8f9fa;
+    border: 1px solid #e2e8f0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -80,9 +82,10 @@
 .imagen-principal img {
     max-width: 100%;
     max-height: 100%;
-    
-    object-fit: contain; 
+
+    object-fit: contain;
 }
+
 /* MINIATURAS */
 .imagenes-secundarias {
     display: grid;
@@ -91,7 +94,7 @@
 }
 
 .imagen-miniatura {
-    width: 100%; 
+    width: 100%;
     border-radius: 5px;
     aspect-ratio: 1 / 1;
     overflow: hidden;
@@ -111,58 +114,149 @@
 .imagen-miniatura img {
     width: 100%;
     height: 100%;
-    object-fit: cover; 
+    object-fit: cover;
 }
+
 /* Columna de información */
 .producto-info {
     flex: 1;
 }
 
 .producto-titulo {
-    font-size: 28px;
+    font-size: 16px;
     margin-bottom: 10px;
-    color: #212529;
+    color: #0A0A0A;
 }
 
 
 .precio {
-    font-size: 32px;
+    font-size: 30px;
     font-weight: bold;
-    color: #e63946;
+    color: #00A63E;
     margin-bottom: 20px;
 }
 
-.descripcion, .caracteristicas {
+.descripcion,
+.caracteristicas {
     margin-bottom: 25px;
 }
 
-.descripcion h3, .caracteristicas h3 {
+.descripcion h3,
+.caracteristicas h3 {
     font-size: 18px;
     margin-bottom: 10px;
     color: #495057;
 }
 
 .descripcion p {
-    color: #6c757d;
+    color: #5A6C7D;
     line-height: 1.6;
 }
 
-.caracteristicas ul {
-    list-style-type: none;
-    padding-left: 0;
+.caracteristicas {
+    margin-top: 20px;
+    width: 100%;
 }
 
-.caracteristicas li {
-    padding: 5px 0;
-    position: relative;
-    padding-left: 20px;
+.card-vendedor {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #dfe3e8;
+    border-radius: 12px;
+    padding: 16px 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
 }
 
-.caracteristicas li:before {
-    content: "•";
-    color: #e63946;
+.vendedor-perfil {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.avatar-iniciales {
+    width: 48px;
+    height: 48px;
+    background-color: #eaeff5;
+    color: #2d3748;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
     font-weight: bold;
-    position: absolute;
-    left: 0;
 }
 
+.info-texto {
+    display: flex;
+    flex-direction: column;
+}
+
+.etiqueta-vendido {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.nombre-vendedor {
+    font-size: 16px;
+    font-weight: 600;
+    color: #000;
+}
+
+.matricula-vendedor {
+    font-size: 13px;
+    color: #718096;
+}
+
+.btn-contactar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a1a;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-contactar:hover {
+    color: #ffff;
+    background-color: #4299e1;
+}
+
+.form-transaccion {
+    width: 100%;
+    margin-top: 15px;
+}
+
+.btn-transaccion {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    background-color: #3b82f6;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-transaccion:hover {
+    background-color: #2563eb;
+}
+
+.btn-transaccion svg {
+    margin-top: 2px;
+}
