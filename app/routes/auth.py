@@ -328,6 +328,159 @@ def eliminar_producto(pub_id):
     flash("Publicación eliminada correctamente.")
     return redirect(url_for("auth.home"))
 
+# ---------- INICIAR TRANSACCION ----------
+@bp.route("/crear-transaccion/<int:pub_id>", methods=["POST"])
+def crear_transaccion(pub_id):
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    comprador_id = session["usuario_id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Obtener vendedor de la publicación
+    cursor.execute("SELECT id_vendedor FROM publicaciones WHERE idPublicaciones=%s", (pub_id,))
+    pub = cursor.fetchone()
+
+    if not pub:
+        flash("Publicación no encontrada.")
+        return redirect(url_for("auth.home"))
+
+    vendedor_id = pub["id_vendedor"]
+
+    # Insertar transacción
+    cursor.execute("""
+        INSERT INTO transaccion (id_vendedor, id_comprador, id_publicacion)
+        VALUES (%s, %s, %s)
+    """, (vendedor_id, comprador_id, pub_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    flash("Transacción creada. Esperando confirmación del vendedor.")
+    return redirect(url_for("auth.home"))
+
+# ---------- CONFIRMAR TRANSACCION ----------
+@bp.route("/confirmar-transaccion/<int:trans_id>", methods=["POST"])
+def confirmar_transaccion(trans_id):
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    vendedor_id = session["usuario_id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE transaccion
+        SET estado = 'finalizada'
+        WHERE id_transaccion = %s AND id_vendedor = %s
+    """, (trans_id, vendedor_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    flash("Transacción confirmada. El comprador será notificado.")
+    return redirect(url_for("auth.home"))
+
+# ----------- CANCELAR TRANSACCION ----------
+@bp.route("/cancelar-transaccion/<int:trans_id>", methods=["POST"])
+def cancelar_transaccion(trans_id):
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    vendedor_id = session["usuario_id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Validar que la transacción pertenece al vendedor actual
+    cursor.execute("""
+        SELECT id_comprador FROM transaccion
+        WHERE id_transaccion = %s AND id_vendedor = %s
+    """, (trans_id, vendedor_id))
+    transaccion = cursor.fetchone()
+
+    if not transaccion:
+        flash("Transacción no encontrada o no pertenece a tu cuenta.")
+        cursor.close()
+        conn.close()
+        return redirect(url_for("auth.home"))
+
+    # Actualizar estado a cancelada
+    cursor.execute("""
+        UPDATE transaccion
+        SET estado = 'cancelada'
+        WHERE id_transaccion = %s AND id_vendedor = %s
+    """, (trans_id, vendedor_id))
+    conn.commit()
+
+    # # Insertar notificación al comprador
+    # cursor.execute("""
+    #     INSERT INTO notificaciones (id_usuario, mensaje)
+    #     VALUES (%s, %s)
+    # """, (transaccion["id_comprador"], "La transacción ha sido cancelada por el vendedor."))
+    # conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    flash("Transacción cancelada correctamente. El comprador ha sido notificado.")
+    return redirect(url_for("auth.home"))
+
+# # ----------- BORRAR TRANSACCION ----------
+# @bp.route("/borrar-transaccion/<int:trans_id>", methods=["POST"])
+# def borrar_transaccion(trans_id):
+#     if "usuario_id" not in session:
+#         return redirect(url_for("auth.login"))
+#     vendedor_id = session["usuario_id"]
+#     conn = get_db_connection()
+#     cursor = conn.cursor()
+#     # Validar que la transacción pertenece al vendedor actual
+#     cursor.execute("""
+#         DELETE FROM transaccion
+#         WHERE id_transaccion = %s AND id_vendedor = %s
+#     """, (trans_id, vendedor_id))
+#     conn.commit()
+#     cursor.close()
+#     conn.close()
+#     flash("La transacción ha sido eliminada.")
+#     return redirect(url_for("auth.home"))
+
+# ---------- MIS TRANSACCIONES ----------
+@bp.route("/mis-transacciones")
+def mis_transacciones():
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    vendedor_id = session["usuario_id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT 
+            t.id_transaccion,
+            t.estado,
+            t.fecha_creacion,
+            u.nombre AS comprador,
+            p.titulo AS producto
+        FROM transaccion t
+        JOIN usuarios u ON t.id_comprador = u.idUsuarios
+        JOIN publicaciones p ON t.id_publicacion = p.idPublicaciones
+        WHERE t.id_vendedor = %s
+        ORDER BY t.fecha_creacion DESC
+    """, (vendedor_id,))
+    transacciones = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("user/mis_transacciones.html", transacciones=transacciones)
+
 # ---------- PÁGINA PRINCIPAL ----------
 @bp.route("/pagina_principar")
 @bp.route("/home")  # alias para compatibilidad con url_for("auth.home")

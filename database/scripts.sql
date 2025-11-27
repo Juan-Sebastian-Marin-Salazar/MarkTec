@@ -97,6 +97,23 @@ CREATE TABLE IF NOT EXISTS imagenes_publicacion (
 
 CREATE INDEX idx_imagenes_publicacion ON imagenes_publicacion(id_publicacion);
 
+-- ===== TRANSACCIONES =====
+CREATE TABLE transaccion (
+  id_transaccion int NOT NULL AUTO_INCREMENT,
+  id_vendedor int NOT NULL,
+  id_comprador int NOT NULL,
+  id_publicacion int NOT NULL,
+  estado varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en progreso',
+  fecha_creacion timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_transaccion),
+  KEY fk_vendedor (id_vendedor),
+  KEY fk_comprador (id_comprador),
+  KEY fk_publicacion (id_publicacion),
+  CONSTRAINT fk_comprador FOREIGN KEY (id_comprador) REFERENCES usuarios (idUsuarios) ON DELETE RESTRICT,
+  CONSTRAINT fk_publicacion FOREIGN KEY (id_publicacion) REFERENCES publicaciones (idPublicaciones) ON DELETE RESTRICT,
+  CONSTRAINT fk_vendedor FOREIGN KEY (id_vendedor) REFERENCES usuarios (idUsuarios) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ===== CATEGORIAS =====
 CREATE TABLE IF NOT EXISTS categorias (
   idCategorias INT AUTO_INCREMENT PRIMARY KEY,

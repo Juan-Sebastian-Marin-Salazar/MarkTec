@@ -50,7 +50,11 @@
                         <li>{{ producto.vendedor }}</li>
                     </ul>
                 </div>
+                <form action="{{ url_for('auth.crear_transaccion', pub_id=producto.idPublicaciones) }}" method="post">
+                    <button type="submit" class="btn btn-primary">Iniciar transacción</button>
+                </form>
             </div>
+
         </div>
     </div>
 

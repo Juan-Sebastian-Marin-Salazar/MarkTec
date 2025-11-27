@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Transacciones</title>
+</head>
+<body>
+  <button class="back-button" onclick="window.history.back()"><~</button>
+  <h2>Mis Transacciones</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Producto</th>
+        <th>Comprador</th>
+        <th>Estado</th>
+        <th>Fecha</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transacciones %}
+      <tr>
+        <td>{{ t.id_transaccion }}</td>
+        <td>{{ t.producto }}</td>
+        <td>{{ t.comprador }}</td>
+        <td>{{ t.estado }}</td>
+        <td>{{ t.fecha_creacion }}</td>
+        <td>
+          {% if t.estado == 'en progreso' %}
+            <!-- Botón Confirmar -->
+            <form action="{{ url_for('auth.confirmar_transaccion', trans_id=t.id_transaccion) }}" method="post" style="display:inline;">
+              <button type="submit" class="btn btn-success btn-sm">Confirmar</button>
+            </form>
+            <!-- Botón Cancelar -->
+            <form action="{{ url_for('auth.cancelar_transaccion', trans_id=t.id_transaccion) }}" method="post" style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
+            </form>
+          {% else %}
+            <span class="badge bg-secondary">{{ t.estado }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
