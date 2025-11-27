@@ -27,7 +27,7 @@ def login():
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT idUsuarios, nombre, matricula
+        SELECT idUsuarios, nombre, matricula, telefono
         FROM usuarios
         WHERE correo=%s AND clave_hash=%s
     """, (correo, clave_hash))
@@ -40,6 +40,8 @@ def login():
         session["usuario_id"] = usuario["idUsuarios"]
         session["nombre"] = usuario["nombre"]
         session["matricula"] = usuario["matricula"]
+        # almacenar telefono en sesión puede ser útil (opcional)
+        session["telefono"] = usuario.get("telefono")
         return redirect(url_for("auth.home"))
 
     flash("Correo o contraseña incorrectos")
@@ -53,12 +55,13 @@ def registro():
 
     nombre = request.form.get("nombre")
     matricula = request.form.get("matricula")
+    telefono = request.form.get("telefono")            # <-- CORRECCIÓN: usar .get()
     correo = request.form.get("correo")
     password = request.form.get("password")
     confirm = request.form.get("confirm")
 
     # Validaciones
-    if not all([nombre, matricula, correo, password, confirm]):
+    if not all([nombre, matricula, correo, password, confirm, telefono]):
         flash("Por favor completa todos los campos.")
         return render_template("user/registro.html")
 
@@ -76,11 +79,11 @@ def registro():
     cursor = conn.cursor()
 
     try:
-        # Crear usuario
+        # Crear usuario (agregado telefono)
         cursor.execute("""
-            INSERT INTO usuarios (nombre, correo, clave_hash, matricula)
-            VALUES (%s, %s, %s, %s)
-        """, (nombre, correo, clave_hash, matricula))
+            INSERT INTO usuarios (nombre, correo, clave_hash, matricula, telefono)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (nombre, correo, clave_hash, matricula, telefono))
         conn.commit()
 
         # Obtener ID del nuevo usuario
@@ -272,9 +275,9 @@ def detalle_producto(pub_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Obtener datos del producto
+    # Obtener datos del producto (incluye telefono del vendedor)
     cursor.execute("""
-        SELECT p.*, u.nombre AS vendedor
+        SELECT p.*, u.nombre AS vendedor, u.telefono AS telefono_vendedor
         FROM publicaciones p
         JOIN usuarios u ON p.id_vendedor = u.idUsuarios
         WHERE p.idPublicaciones = %s
@@ -303,8 +306,6 @@ def detalle_producto(pub_id):
         producto=producto,
         imagenes=imagenes
     )
-
-# ---------- EDITAR PUBLICACION (PRODUCTO) ----------
 
 # ---------- ELIMINAR PUBLICACIÓN ----------
 @bp.route("/eliminar-producto/<int:pub_id>", methods=["POST"])
@@ -418,37 +419,11 @@ def cancelar_transaccion(trans_id):
     """, (trans_id, vendedor_id))
     conn.commit()
 
-    # # Insertar notificación al comprador
-    # cursor.execute("""
-    #     INSERT INTO notificaciones (id_usuario, mensaje)
-    #     VALUES (%s, %s)
-    # """, (transaccion["id_comprador"], "La transacción ha sido cancelada por el vendedor."))
-    # conn.commit()
-
     cursor.close()
     conn.close()
 
     flash("Transacción cancelada correctamente. El comprador ha sido notificado.")
     return redirect(url_for("auth.home"))
-
-# # ----------- BORRAR TRANSACCION ----------
-# @bp.route("/borrar-transaccion/<int:trans_id>", methods=["POST"])
-# def borrar_transaccion(trans_id):
-#     if "usuario_id" not in session:
-#         return redirect(url_for("auth.login"))
-#     vendedor_id = session["usuario_id"]
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
-#     # Validar que la transacción pertenece al vendedor actual
-#     cursor.execute("""
-#         DELETE FROM transaccion
-#         WHERE id_transaccion = %s AND id_vendedor = %s
-#     """, (trans_id, vendedor_id))
-#     conn.commit()
-#     cursor.close()
-#     conn.close()
-#     flash("La transacción ha sido eliminada.")
-#     return redirect(url_for("auth.home"))
 
 # ---------- MIS TRANSACCIONES ----------
 @bp.route("/mis-transacciones")
@@ -482,7 +457,7 @@ def mis_transacciones():
     return render_template("user/mis_transacciones.html", transacciones=transacciones)
 
 # ---------- PÁGINA PRINCIPAL ----------
-@bp.route("/pagina_principar")
+@bp.route("/pagina_principal")
 @bp.route("/home")  # alias para compatibilidad con url_for("auth.home")
 def home():
     if "usuario_id" not in session:
