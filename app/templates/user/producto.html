@@ -9,12 +9,13 @@
 </head>
 <body>
     <!-- HEADER FIJO -->
-    <header class="fixed-header">
-        <div class="header-content">
-            <button class="back-button" onclick="window.history.back()"><~</button>
-            <h1>{{ producto.titulo }}</h1>
-        </div>
-    </header>
+<header class="fixed-header">
+    <div class="header-content">
+        <button class="back-button" onclick="window.history.back()">
+            <span class="back-icon">← {{ producto.titulo}}</span>
+        </button>
+    </div>
+</header>
 
     <div class="producto-container">
         <div class="producto-content">
