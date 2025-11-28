@@ -1,0 +1,128 @@
+
+h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 25px;
+}
+
+/* --- BOTÓN DE VOLVER --- */
+.back-button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    color: #4a5568;
+    cursor: pointer;
+    margin-bottom: 20px;
+    padding: 8px 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+
+.back-button:hover {
+    background-color: #e2e8f0;
+    transform: translateX(-3px); /* Pequeño movimiento a la izquierda */
+}
+
+/* --- TABLA DE TRANSACCIONES --- */
+.table {
+    width: 100%;
+    border-collapse: collapse; /* Elimina espacios entre bordes */
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden; /* Para que los bordes redondeados funcionen en las esquinas */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Sombra suave */
+}
+
+/* Cabecera de la tabla */
+.table thead {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table th {
+    text-align: left;
+    padding: 18px 20px;
+    font-weight: 600;
+    color: #495057;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+/* Cuerpo de la tabla */
+.table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f3f5;
+    vertical-align: middle;
+    font-size: 15px;
+}
+
+/* Efecto hover en las filas */
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Última fila sin borde inferior */
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- BOTONES DE ACCIÓN --- */
+.btn {
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    color: white;
+    margin-right: 5px; /* Separación entre botones */
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+/* Botón Confirmar (Verde) */
+.btn-success {
+    background-color: #2ecc71;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+}
+
+/* Botón Cancelar (Rojo) */
+.btn-danger {
+    background-color: #e74c3c;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+/* Formularios en línea para que los botones queden juntos */
+form {
+    display: inline-block;
+}
+
+/* --- BADGE (ETIQUETA DE ESTADO) --- */
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 20px;
+    text-transform: capitalize;
+}
+
+/* Estilo por defecto para el badge (gris) */
+.badge.bg-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
