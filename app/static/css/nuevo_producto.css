@@ -306,7 +306,12 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
 }
-
+ /* drag-drop imagen */
+.upload-area.dragover {
+    background-color: #e8f2ff;
+    border-color: #3b82f6;
+    transition: 0.2s ease;
+}
 /* Responsive */
 @media (max-width: 768px) {
     .main-content {

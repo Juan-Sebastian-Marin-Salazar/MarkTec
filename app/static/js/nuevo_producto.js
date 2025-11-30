@@ -6,6 +6,43 @@ const maxImages = 6;
 
 imageInput.addEventListener("change", handleImageSelection);
 
+// === DRAG & DROP ===
+const uploadArea = document.getElementById("uploadArea");
+
+// Evitar comportamiento por defecto del navegador
+["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
+    uploadArea.addEventListener(eventName, e => e.preventDefault());
+    uploadArea.addEventListener(eventName, e => e.stopPropagation());
+});
+
+// Efecto visual al arrastrar
+uploadArea.addEventListener("dragover", () => {
+    uploadArea.classList.add("dragover");
+});
+
+uploadArea.addEventListener("dragleave", () => {
+    uploadArea.classList.remove("dragover");
+});
+
+// Cuando sueltan la imagen
+uploadArea.addEventListener("drop", (e) => {
+    uploadArea.classList.remove("dragover");
+
+    const newFiles = Array.from(e.dataTransfer.files);  // nuevas imágenes arrastradas
+    const currentFiles = Array.from(imageInput.files);  // imágenes ya elegidas antes
+
+    // Combinar ambas sin exceder tu límite de imágenes
+    const combinedFiles = [...currentFiles, ...newFiles].slice(0, maxImages);
+
+    // Crear un DataTransfer nuevo con todas las imágenes
+    const dt = new DataTransfer();
+    combinedFiles.forEach(f => dt.items.add(f));
+
+    // Actualizar input y vista previa
+    imageInput.files = dt.files;
+    handleImageSelection({ target: { files: dt.files } });
+});
+
 function handleImageSelection(event) {
   const files = Array.from(event.target.files);
   imagePreview.innerHTML = ""; // Limpia previas

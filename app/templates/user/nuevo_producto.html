@@ -57,11 +57,17 @@
                             placeholder="Ej: Tacos al Pastor - Orden de 3"
                             required
                         >
-                        <div class="char-counter">
-                            <span id="nameCharCount">0</span>/100 caracteres
-                        </div>
                     </div>
-
+                    <!-- Edificio -->
+                    <div class="form-group">
+                    <label for="edificio" class="form-label">Edificio *</label>
+                    <select name="edificio" id="edificio" class="form-select" required>
+                        <option value="" disabled selected>Selecciona un punto de entrega</option>
+                        <option value="U (bancas)">U (bancas)</option>
+                        <option value="L (bancas)">L (bancas)</option>
+                        <option value="F (bancas)">F (bancas)</option>
+                    </select>
+                    </div>
                     <!-- Categoría -->
                     <div class="form-group">
                         <label for="category" class="form-label">
@@ -110,9 +116,6 @@
                             placeholder="Describe tu producto detalladamente. Incluye características, ingredientes, especificaciones, etc."
                             required
                         ></textarea>
-                        <div class="char-counter">
-                            <span id="descCharCount">0</span>/500 caracteres
-                        </div>
                     </div>
                 </section>
 

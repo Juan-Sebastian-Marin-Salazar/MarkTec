@@ -217,10 +217,11 @@ def nuevo_producto():
     descripcion = request.form.get("descripcion")
     precio = request.form.get("precio")
     categoria_id = request.form.get("categoria")
+    edificio = request.form.get("edificio")
     imagenes = request.files.getlist("imagenes")
-
-    if not titulo or not precio or not categoria_id:
-        flash("Título, precio y categoría son obligatorios.")
+    
+    if not titulo or not precio or not categoria_id or not edificio:
+        flash("Título, precio, categoría y edificio son obligatorios.")
         return redirect(url_for("auth.nuevo_producto"))
 
     conn = get_db_connection()
@@ -228,9 +229,9 @@ def nuevo_producto():
 
     # 1. Insertar la publicación
     cursor.execute("""
-        INSERT INTO publicaciones (id_vendedor, titulo, descripcion, precio)
-        VALUES (%s, %s, %s, %s)
-    """, (session["usuario_id"], titulo, descripcion, precio))
+        INSERT INTO publicaciones (id_vendedor, titulo, descripcion, precio, edificio)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (session["usuario_id"], titulo, descripcion, precio, edificio))
     conn.commit()
     publicacion_id = cursor.lastrowid
 

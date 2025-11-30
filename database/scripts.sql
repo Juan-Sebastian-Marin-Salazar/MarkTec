@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS publicaciones (
 
 CREATE INDEX idx_publicaciones_vendedor ON publicaciones(id_vendedor);
 CREATE INDEX idx_publicaciones_estado ON publicaciones(estado_publicacion);
+ALTER TABLE publicaciones DROP COLUMN metadatos, ADD COLUMN edificio VARCHAR(50) COLLATE utf8mb4_unicode_ci NOT NULL;
 ALTER TABLE publicaciones ADD FULLTEXT INDEX ft_publicaciones_titulo_descripcion (titulo, descripcion);
 
 -- ===== IMAGENES_PUBLICACION =====
@@ -133,93 +134,6 @@ CREATE TABLE IF NOT EXISTS publicaciones_categoria (
   CONSTRAINT fk_pe_categoria FOREIGN KEY (id_categoria) REFERENCES categorias(idCategorias) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- -- ===== ETIQUETAS =====
--- CREATE TABLE IF NOT EXISTS etiquetas (
---   idEtiquetas INT AUTO_INCREMENT PRIMARY KEY,
---   nombre_etiqueta VARCHAR(150) NOT NULL,
---   slug VARCHAR(150) NOT NULL,
---   id_creador INT NULL,
---   esta_activa TINYINT(1) DEFAULT 1,
---   creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
---   UNIQUE KEY ux_etiquetas_slug (slug),
---   CONSTRAINT fk_etiquetas_creador FOREIGN KEY (id_creador) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -- ===== PUBLICACIONES_ETIQUETAS =====
--- CREATE TABLE IF NOT EXISTS publicaciones_etiquetas (
---   id_publicacion INT NOT NULL,
---   id_etiqueta INT NOT NULL,
---   PRIMARY KEY (id_publicacion, id_etiqueta),
---   CONSTRAINT fk_pe_publicacion FOREIGN KEY (id_publicacion) REFERENCES publicaciones(idPublicaciones) ON DELETE CASCADE,
---   CONSTRAINT fk_pe_etiqueta FOREIGN KEY (id_etiqueta) REFERENCES etiquetas(idEtiquetas) ON DELETE CASCADE
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ===== CONVERSACIONES =====
-CREATE TABLE IF NOT EXISTS conversaciones (
-  idConversaciones INT AUTO_INCREMENT PRIMARY KEY,
-  id_producto INT NULL,
-  id_comprador INT NULL,
-  id_vendedor INT NULL,
-  efimera TINYINT(1) DEFAULT 1,
-  expira_en TIMESTAMP NULL DEFAULT NULL,
-  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  ultimo_mensaje_en TIMESTAMP NULL DEFAULT NULL,
-  CONSTRAINT fk_conversaciones_producto FOREIGN KEY (id_producto) REFERENCES publicaciones(idPublicaciones) ON DELETE SET NULL,
-  CONSTRAINT fk_conversaciones_comprador FOREIGN KEY (id_comprador) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL,
-  CONSTRAINT fk_conversaciones_vendedor FOREIGN KEY (id_vendedor) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX idx_conversaciones_expira_en ON conversaciones(expira_en);
-
--- ===== MENSAJES_CONVERSACION =====
-CREATE TABLE IF NOT EXISTS mensajes_conversacion (
-  idMensajesConversacion INT AUTO_INCREMENT PRIMARY KEY,
-  id_conversacion INT NOT NULL,
-  id_remitente INT NULL,
-  mensaje TEXT,
-  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  eliminado TINYINT(1) DEFAULT 0,
-  CONSTRAINT fk_mensajes_conversacion_conv FOREIGN KEY (id_conversacion) REFERENCES conversaciones(idConversaciones) ON DELETE CASCADE,
-  CONSTRAINT fk_mensajes_conversacion_remitente FOREIGN KEY (id_remitente) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ===== TICKETS_SOPORTE =====
-CREATE TABLE IF NOT EXISTS tickets_soporte (
-  idTicketsSoporte INT AUTO_INCREMENT PRIMARY KEY,
-  id_usuario INT NULL,
-  asignado_a INT NULL,
-  asunto VARCHAR(255) NOT NULL,
-  estado_ticket VARCHAR(30) DEFAULT 'abierto',
-  prioridad VARCHAR(20) DEFAULT 'normal',
-  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_tickets_soporte_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL,
-  CONSTRAINT fk_tickets_soporte_asignado FOREIGN KEY (asignado_a) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ===== MENSAJES_SOPORTE =====
-CREATE TABLE IF NOT EXISTS mensajes_soporte (
-  idMensajesSoporte INT AUTO_INCREMENT PRIMARY KEY,
-  id_ticket INT NOT NULL,
-  id_remitente INT NULL,
-  mensaje TEXT NOT NULL,
-  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_mensajes_soporte_ticket FOREIGN KEY (id_ticket) REFERENCES tickets_soporte(idTicketsSoporte) ON DELETE CASCADE,
-  CONSTRAINT fk_mensajes_soporte_remitente FOREIGN KEY (id_remitente) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ===== REGISTROS_AUDITORIA =====
-CREATE TABLE IF NOT EXISTS registros_auditoria (
-  idRegistrosAuditoria INT AUTO_INCREMENT PRIMARY KEY,
-  id_actor INT NULL,
-  accion VARCHAR(150) NOT NULL,
-  tipo_objetivo VARCHAR(50),
-  id_objetivo INT,
-  detalles JSON,
-  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_auditoria_actor FOREIGN KEY (id_actor) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- ===== PERMISOS =====
 CREATE TABLE IF NOT EXISTS permisos (
   idPermisos INT AUTO_INCREMENT PRIMARY KEY,
@@ -243,14 +157,6 @@ INSERT INTO roles (nombre_rol, tipo_rol, descripcion) VALUES
 ('vendedor','regular','Usuario que publica productos'),
 ('comprador','regular','Usuario que compra')
 ON DUPLICATE KEY UPDATE nombre_rol = VALUES(nombre_rol);
-
--- INSERT INTO etiquetas (nombre_etiqueta, slug, id_creador, esta_activa) VALUES
--- ('Libros','libros', NULL, 1),
--- ('Muebles','muebles', NULL, 1),
--- ('Ropa','ropa', NULL, 1),
--- ('Cursos / Clases','cursos', NULL, 1),
--- ('Electronica','electronica', NULL, 1)
--- ON DUPLICATE KEY UPDATE nombre_etiqueta = VALUES(nombre_etiqueta);
 
 INSERT INTO categorias (nombre_categoria, id_creador, esta_activa) VALUES ('Alimentos', NULL, 1);
 INSERT INTO categorias (nombre_categoria, id_creador, esta_activa) VALUES ('Productos', NULL, 1);

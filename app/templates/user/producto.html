@@ -41,7 +41,9 @@
             <!-- INFORMACIÓN -->
             <div class="producto-info">
                 <h2 class="producto-titulo">{{ producto.titulo }}</h2>
+                <p><strong>Edificio:</strong> {{ producto.edificio }}</p>
                 <p class="precio">${{ "%.2f"|format(producto.precio) }}</p>
+                
                 <div class="descripcion">
                     <h3>Descripción</h3>
                     <p>{{ producto.descripcion or "Sin descripción disponible" }}</p>
