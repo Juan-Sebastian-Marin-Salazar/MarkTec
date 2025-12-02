@@ -134,9 +134,12 @@
                         <p class="precio detalle">${{ "%.2f"|format(pub.precio) }}</p>
 
                         <!-- BOTÓN ELIMINAR -->
-                        <form action="/eliminar-producto/{{ pub.idPublicaciones }}" method="POST" class="form-eliminar">
-                            <button type="submit" class="btn-eliminar">Eliminar</button>
-                        </form>
+                        <div class="vendedor-actions">
+                            <a href="/editar-producto/{{ pub.idPublicaciones }}" class="btn-editar">Editar</a>
+                            <form action="/eliminar-producto/{{ pub.idPublicaciones }}" method="POST" class="form-eliminar">
+                                <button type="submit" class="btn-eliminar">Eliminar</button>
+                            </form>
+                        </div>
                     </div>
                     {% endfor %}
                 {% else %}

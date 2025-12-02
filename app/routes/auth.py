@@ -267,6 +267,151 @@ def nuevo_producto():
     flash("Tu publicación ha sido creada correctamente.")
     return redirect(url_for("auth.home"))
 
+# ---------- EDITAR PUBLICACIÓN (PRODUCTO) ----------
+@bp.route("/editar-producto/<int:pub_id>", methods=["GET", "POST"])
+def editar_producto(pub_id):
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Obtener la publicación y validar existencia
+    cursor.execute("SELECT * FROM publicaciones WHERE idPublicaciones=%s", (pub_id,))
+    producto = cursor.fetchone()
+
+    if not producto:
+        cursor.close()
+        conn.close()
+        return "Producto no encontrado", 404
+
+    # Validar propietario
+    if producto.get("id_vendedor") != session["usuario_id"]:
+        cursor.close()
+        conn.close()
+        flash("No tienes permiso para editar esta publicación.")
+        return redirect(url_for("auth.home"))
+
+    # GET: mostrar formulario con datos existentes
+    if request.method == "GET":
+        # cargar categorias activas
+        cursor.execute("""
+            SELECT idCategorias, nombre_categoria
+            FROM categorias
+            WHERE esta_activa = 1
+            ORDER BY nombre_categoria
+        """)
+        categorias = cursor.fetchall()
+
+        # cargar categoria actual (si existe)
+        cursor.execute("SELECT id_categoria FROM publicaciones_categoria WHERE id_publicacion=%s LIMIT 1", (pub_id,))
+        cat_row = cursor.fetchone()
+        categoria_actual = cat_row["id_categoria"] if cat_row else None
+
+        # cargar imagenes
+        cursor.execute("SELECT idImagenesPublicacion, url, orden FROM imagenes_publicacion WHERE id_publicacion=%s ORDER BY orden ASC", (pub_id,))
+        imagenes = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return render_template(
+            "user/editar_producto.html",
+            producto=producto,
+            categorias=categorias,
+            imagenes=imagenes,
+            categoria_actual=categoria_actual
+        )
+
+    # POST: guardar cambios
+    titulo = request.form.get("titulo")
+    descripcion = request.form.get("descripcion")
+    precio = request.form.get("precio")
+    categoria_id = request.form.get("categoria")
+    edificio = request.form.get("edificio")
+    imagenes_nuevas = request.files.getlist("imagenes")
+    imagenes_a_eliminar = request.form.getlist("imagenes_a_eliminar")
+
+    if not titulo or not precio or not categoria_id or not edificio:
+        flash("Título, precio, categoría y edificio son obligatorios.")
+        return redirect(url_for("auth.editar_producto", pub_id=pub_id))
+
+    # Procesar eliminación de imágenes marcadas
+    for img_id in imagenes_a_eliminar:
+        cursor.execute("SELECT url FROM imagenes_publicacion WHERE idImagenesPublicacion=%s AND id_publicacion=%s", (img_id, pub_id))
+        img_row = cursor.fetchone()
+        if img_row:
+            # Borrar fila
+            cursor.execute("DELETE FROM imagenes_publicacion WHERE idImagenesPublicacion=%s", (img_id,))
+            
+            # Si no hay otros registros con la misma URL, eliminar el archivo físico
+            url = img_row.get("url")
+            cursor.execute("SELECT COUNT(*) AS cnt FROM imagenes_publicacion WHERE url=%s", (url,))
+            cnt_row = cursor.fetchone()
+            cnt = cnt_row.get("cnt") if cnt_row else 0
+            
+            if cnt == 0 and url:
+                filename = os.path.basename(url)
+                path = os.path.join(os.getcwd(), "app", "static", "uploads", filename)
+                try:
+                    if os.path.exists(path):
+                        os.remove(path)
+                except Exception:
+                    pass
+    
+    conn.commit()
+
+    # Actualizar publicación
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE publicaciones
+        SET titulo=%s, descripcion=%s, precio=%s, edificio=%s
+        WHERE idPublicaciones=%s
+    """, (titulo, descripcion, precio, edificio, pub_id))
+    conn.commit()
+
+    # Reemplazar categoría (simple enfoque: borrar y volver a insertar)
+    cursor.execute("DELETE FROM publicaciones_categoria WHERE id_publicacion=%s", (pub_id,))
+    cursor.execute("INSERT INTO publicaciones_categoria (id_publicacion, id_categoria) VALUES (%s, %s)", (pub_id, categoria_id))
+    conn.commit()
+
+    # Guardar nuevas imágenes (si se suben)
+    if imagenes_nuevas:
+        uploads_dir = os.path.join(os.getcwd(), "app", "static", "uploads")
+        os.makedirs(uploads_dir, exist_ok=True)
+
+        # determine current max orden to append
+        cursor.execute("SELECT COALESCE(MAX(orden), -1) AS maxorden FROM imagenes_publicacion WHERE id_publicacion=%s", (pub_id,))
+        row = cursor.fetchone()
+        start_index = row[0] + 1 if row and isinstance(row[0], int) else 0
+
+        for i, img in enumerate(imagenes_nuevas):
+            if img and img.filename:
+                filename = secure_filename(img.filename)
+                ruta_absoluta = os.path.join(uploads_dir, filename)
+                img.save(ruta_absoluta)
+
+                url_imagen = f"/static/uploads/{filename}"
+
+                # Avoid inserting duplicate image rows for the same URL
+                cursor.execute("SELECT COUNT(*) FROM imagenes_publicacion WHERE id_publicacion=%s AND url=%s", (pub_id, url_imagen))
+                exists = cursor.fetchone()[0]
+                if exists == 0:
+                    cursor.execute("""
+                        INSERT INTO imagenes_publicacion (id_publicacion, url, texto_alternativo, orden)
+                        VALUES (%s, %s, %s, %s)
+                    """, (pub_id, url_imagen, titulo, start_index + i))
+                else:
+                    # skip duplicate
+                    pass
+        conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    flash("Tu publicación ha sido actualizada correctamente.")
+    return redirect(url_for("auth.detalle_producto", pub_id=pub_id))
+
 # ---------- DETALLE PUBLICACIÓN (PRODUCTO) ----------
 @bp.route("/producto/<int:pub_id>")
 def detalle_producto(pub_id):
@@ -308,6 +453,61 @@ def detalle_producto(pub_id):
         imagenes=imagenes
     )
 
+# ---------- ELIMINAR IMAGEN DE PUBLICACIÓN ----------
+@bp.route("/eliminar-imagen/<int:img_id>", methods=["POST"]) 
+def eliminar_imagen(img_id):
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Obtener la imagen y la publicacion asociada
+    cursor.execute("SELECT idImagenesPublicacion, id_publicacion, url FROM imagenes_publicacion WHERE idImagenesPublicacion=%s", (img_id,))
+    img = cursor.fetchone()
+
+    if not img:
+        cursor.close()
+        conn.close()
+        flash("Imagen no encontrada.")
+        return redirect(url_for("auth.home"))
+
+    pub_id = img.get("id_publicacion")
+
+    # validar propietario de la publicacion
+    cursor.execute("SELECT id_vendedor FROM publicaciones WHERE idPublicaciones=%s", (pub_id,))
+    pub = cursor.fetchone()
+    if not pub or pub.get("id_vendedor") != session["usuario_id"]:
+        cursor.close()
+        conn.close()
+        flash("No tienes permiso para eliminar esta imagen.")
+        return redirect(url_for("auth.home"))
+
+    # borrar fila de imagen
+    cursor.execute("DELETE FROM imagenes_publicacion WHERE idImagenesPublicacion=%s", (img_id,))
+    conn.commit()
+
+    # si ningun otro registro referencia el mismo archivo, eliminar archivo fisico
+    url = img.get("url")
+    cursor.execute("SELECT COUNT(*) AS cnt FROM imagenes_publicacion WHERE url=%s", (url,))
+    row = cursor.fetchone()
+    cnt = row.get("cnt") if row and isinstance(row, dict) else (row[0] if row else 0)
+
+    if cnt == 0 and url:
+        filename = os.path.basename(url)
+        path = os.path.join(os.getcwd(), "app", "static", "uploads", filename)
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+        except Exception:
+            pass
+
+    cursor.close()
+    conn.close()
+
+    flash("Imagen eliminada correctamente.")
+    return redirect(url_for("auth.editar_producto", pub_id=pub_id))
+
 # ---------- ELIMINAR PUBLICACIÓN ----------
 @bp.route("/eliminar-producto/<int:pub_id>", methods=["POST"])
 def eliminar_producto(pub_id):
@@ -316,10 +516,10 @@ def eliminar_producto(pub_id):
 
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # Validar que la publicación pertenece al usuario actual
+    # Validar que la publicación pertenece al usuario actual y marcar como eliminada
     cursor.execute("""
-        DELETE FROM publicaciones
+        UPDATE publicaciones
+        SET eliminado_en = NOW()
         WHERE idPublicaciones = %s AND id_vendedor = %s
     """, (pub_id, session["usuario_id"]))
 

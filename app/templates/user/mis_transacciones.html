@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="../../static/css/transacciones.css">
 </head>
 <body>
-  <button class="back-button" onclick="window.history.back()"><~</button>
+  <a href="{{ url_for('auth.home') }}" class="back-button"><~</a>
   <h2>Mis Transacciones</h2>
   <table class="table">
     <thead>
