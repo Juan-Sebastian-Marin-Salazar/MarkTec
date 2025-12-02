@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agregar Nuevo Producto</title>
     <link rel="stylesheet" href="../../static/css/nuevo_producto.css">
 </head>
+
 <body>
     <!-- Header fijo -->
     <header class="fixed-header">
         <div class="header-content">
             <button class="back-button" onclick="window.history.back()">
-                <span><~</span>
+                <span class="back-icon">← volver</span>
             </button>
-            <h1>Agregar Nuevo Producto</h1>
         </div>
     </header>
 
@@ -23,7 +24,8 @@
 
             <hr class="divider">
 
-            <form id="product-form" class="product-form" method="POST" action="/nuevo-producto" enctype="multipart/form-data">
+            <form id="product-form" class="product-form" method="POST" action="/nuevo-producto"
+                enctype="multipart/form-data">
                 <!-- Sección de imagen -->
                 <section class="form-section">
                     <h2>Imagen del Producto *</h2>
@@ -32,7 +34,8 @@
                             <div class="upload-icon">📷</div>
                             <p class="upload-title">Sube una imagen</p>
                             <p class="upload-subtitle">Formatos: JPG, PNG o WEBP (máx. 5MB)</p>
-                            <input type="file" id="imageInput" name="imagenes" accept=".jpg,.jpeg,.png,.webp" multiple class="file-input">
+                            <input type="file" id="imageInput" name="imagenes" accept=".jpg,.jpeg,.png,.webp" multiple
+                                class="file-input">
                             <label for="imageInput" class="file-label">Seleccionar Archivo</label>
                         </div>
                         <div id="imagePreview" class="image-preview"></div>
@@ -48,25 +51,18 @@
                         <label for="productName" class="form-label">
                             Nombre del Producto *
                         </label>
-                        <input 
-                            type="text" 
-                            id="productName" 
-                            name="titulo"
-                            class="form-input"
-                            maxlength="100"
-                            placeholder="Ej: Tacos al Pastor - Orden de 3"
-                            required
-                        >
+                        <input type="text" id="productName" name="titulo" class="form-input" maxlength="100"
+                            placeholder="Ej: Tacos al Pastor - Orden de 3" required>
                     </div>
                     <!-- Edificio -->
                     <div class="form-group">
-                    <label for="edificio" class="form-label">Edificio *</label>
-                    <select name="edificio" id="edificio" class="form-select" required>
-                        <option value="" disabled selected>Selecciona un punto de entrega</option>
-                        <option value="U (bancas)">U (bancas)</option>
-                        <option value="L (bancas)">L (bancas)</option>
-                        <option value="F (bancas)">F (bancas)</option>
-                    </select>
+                        <label for="edificio" class="form-label">Edificio *</label>
+                        <select name="edificio" id="edificio" class="form-select" required>
+                            <option value="" disabled selected>Selecciona un punto de entrega</option>
+                            <option value="U (bancas)">U (bancas)</option>
+                            <option value="L (bancas)">L (bancas)</option>
+                            <option value="F (bancas)">F (bancas)</option>
+                        </select>
                     </div>
                     <!-- Categoría -->
                     <div class="form-group">
@@ -76,7 +72,7 @@
                         <select id="category" name="categoria" class="form-select" required>
                             <option value="" disabled selected>Selecciona una categoría</option>
                             {% for cat in categorias %}
-                                <option value="{{ cat.idCategorias }}">{{ cat.nombre_categoria }}</option>
+                            <option value="{{ cat.idCategorias }}">{{ cat.nombre_categoria }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -88,16 +84,8 @@
                         </label>
                         <div class="price-input-container">
                             <span class="currency-symbol">$</span>
-                            <input 
-                                type="number" 
-                                id="price" 
-                                name="precio"
-                                class="form-input price-input"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                                required
-                            >
+                            <input type="number" id="price" name="precio" class="form-input price-input" min="0"
+                                step="0.01" placeholder="0.00" required>
                         </div>
                     </div>
 
@@ -108,14 +96,9 @@
                         <label for="description" class="form-label">
                             Descripción *
                         </label>
-                        <textarea 
-                            id="description" 
-                            name="descripcion"
-                            class="form-textarea"
-                            maxlength="500"
+                        <textarea id="description" name="descripcion" class="form-textarea" maxlength="500"
                             placeholder="Describe tu producto detalladamente. Incluye características, ingredientes, especificaciones, etc."
-                            required
-                        ></textarea>
+                            required></textarea>
                     </div>
                 </section>
 
@@ -134,4 +117,5 @@
 
     <script src="../../static/js/nuevo_producto.js"></script>
 </body>
+
 </html>

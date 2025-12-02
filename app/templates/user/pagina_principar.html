@@ -16,7 +16,8 @@
     <div class="page">
 
         <!-- Datos del usuario (oculto para JS) -->
-        <div id="datos-usuario" data-verificado="{{ 'true' if es_verificado else 'false' }}" style="display:none;"></div>
+        <div id="datos-usuario" data-verificado="{{ 'true' if es_verificado else 'false' }}" style="display:none;">
+        </div>
 
         <!-- HEADER -->
         <div class="header">
@@ -24,11 +25,13 @@
                 <h2 class="titulo">MarketPlace</h2>
                 <div class="search-container" style="position:relative;">
                     <span class="search-icon"></span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Buscar productos..." autocomplete="off" />
+                    <input type="text" id="searchInput" class="search-input" placeholder="Buscar productos..."
+                        autocomplete="off" />
                     <!-- Dropdown de resultados -->
                     <div id="searchResults" class="search-results oculto" aria-hidden="true"></div>
                 </div>
             </div>
+
 
             <div class="right-section">
                 <div class="user-info">
@@ -38,7 +41,7 @@
                     <!-- Roles -->
                     <div class="roles-container">
                         {% for rol in roles %}
-                            <span class="badge badge-{{ rol|lower }}">{{ rol|capitalize }}</span>
+                        <span class="badge badge-{{ rol|lower }}">{{ rol|capitalize }}</span>
                         {% endfor %}
                     </div>
 
@@ -57,9 +60,7 @@
                             <span>Cliente</span>
                         </button>
 
-                        <button 
-                            class="vendor"
-                            type="button"
+                        <button class="vendor" type="button"
                             data-verificado="{{ 'true' if es_verificado else 'false' }}"
                             onclick="manejarBotonVendedor(this)">
                             <span>Vendedor</span>
@@ -79,7 +80,7 @@
                     <div class="controles-vendedor" id="controlesVendedor">
                         <a href="/nuevo-producto" class="btn-agregar">+ Agregar Producto</a>
                         <!-- Botón para ir a Mis Transacciones -->
-                        <a href="{{ url_for('auth.mis_transacciones') }}" class="btn btn-primary"> Mis Transacciones</a>
+                        <a href="{{ url_for('auth.mis_transacciones') }}" class="btn-agregar"> Mis Transacciones</a>
                     </div>
                 </div>
 
@@ -87,19 +88,17 @@
                 <div class="filtros-categoria">
 
                     <!-- BOTÓN TODOS -->
-                    <a 
-                        href="/pagina_principar"
-                        class="filtro {% if not categoria_filtro %}activo{% endif %}">
+                    <a href="/pagina_principar" class="filtro {% if not categoria_filtro %}activo{% endif %}">
                         Todos
                     </a>
 
                     <!-- CATEGORÍAS DINÁMICAS DESDE SQL -->
                     {% for cat in categorias %}
-                        <a href="/pagina_principar?categoria={{ cat.idCategorias }}"
-                           class="filtro {% if categoria_filtro and categoria_filtro|int == cat.idCategorias %}activo{% endif %}"
-                           data-id="{{ cat.idCategorias }}">
-                           {{ cat.nombre_categoria }}
-                        </a>
+                    <a href="/pagina_principar?categoria={{ cat.idCategorias }}"
+                        class="filtro {% if categoria_filtro and categoria_filtro|int == cat.idCategorias %}activo{% endif %}"
+                        data-id="{{ cat.idCategorias }}">
+                        {{ cat.nombre_categoria }}
+                    </a>
                     {% endfor %}
 
                 </div>
@@ -108,39 +107,39 @@
             <!-- VISTA CLIENTE -->
             <div class="contenido_categoria" id="vistaCliente">
                 {% if publicaciones_cliente %}
-                    {% for pub in publicaciones_cliente %}
-                    <div class="producto" onclick="window.location='/producto/{{ pub.idPublicaciones }}'">
-                        <img src="{{ pub.imagen_url or '/static/img/default.png' }}" alt="{{ pub.titulo }}">
-                        <p class="nombre_v detalle">{{ pub.vendedor }}</p>
-                        <p class="nombre_p">{{ pub.titulo }}</p>
-                        <p class="descripcion detalle">{{ pub.descripcion or 'Sin descripción' }}</p>
-                        <p class="precio detalle">${{ "%.2f"|format(pub.precio) }}</p>
-                    </div>
-                    {% endfor %}
+                {% for pub in publicaciones_cliente %}
+                <div class="producto" onclick="window.location='/producto/{{ pub.idPublicaciones }}'">
+                    <img src="{{ pub.imagen_url or '/static/img/default.png' }}" alt="{{ pub.titulo }}">
+                    <p class="nombre_v detalle">{{ pub.vendedor }}</p>
+                    <p class="nombre_p">{{ pub.titulo }}</p>
+                    <p class="descripcion detalle">{{ pub.descripcion or 'Sin descripción' }}</p>
+                    <p class="precio detalle">${{ "%.2f"|format(pub.precio) }}</p>
+                </div>
+                {% endfor %}
                 {% else %}
-                    <p class="no-publicaciones">No hay publicaciones disponibles.</p>
+                <p class="no-publicaciones">No hay publicaciones disponibles.</p>
                 {% endif %}
             </div>
 
             <!-- VISTA VENDEDOR -->
             <div class="contenido_categoria" id="vistaVendedor" style="display:none;">
                 {% if publicaciones_vendedor %}
-                    {% for pub in publicaciones_vendedor %}
-                    <div class="producto producto-vendedor">
-                        <img src="{{ pub.imagen_url or '/static/img/default.png' }}" alt="{{ pub.titulo }}">
-                        <p class="nombre_v detalle">{{ pub.vendedor }}</p>
-                        <p class="nombre_p">{{ pub.titulo }}</p>
-                        <p class="descripcion detalle">{{ pub.descripcion or 'Sin descripción' }}</p>
-                        <p class="precio detalle">${{ "%.2f"|format(pub.precio) }}</p>
+                {% for pub in publicaciones_vendedor %}
+                <div class="producto producto-vendedor">
+                    <img src="{{ pub.imagen_url or '/static/img/default.png' }}" alt="{{ pub.titulo }}">
+                    <p class="nombre_v detalle">{{ pub.vendedor }}</p>
+                    <p class="nombre_p">{{ pub.titulo }}</p>
+                    <p class="descripcion detalle">{{ pub.descripcion or 'Sin descripción' }}</p>
+                    <p class="precio detalle">${{ "%.2f"|format(pub.precio) }}</p>
 
-                        <!-- BOTÓN ELIMINAR -->
-                        <form action="/eliminar-producto/{{ pub.idPublicaciones }}" method="POST" class="form-eliminar">
-                            <button type="submit" class="btn-eliminar">Eliminar</button>
-                        </form>
-                    </div>
-                    {% endfor %}
+                    <!-- BOTÓN ELIMINAR -->
+                    <form action="/eliminar-producto/{{ pub.idPublicaciones }}" method="POST" class="form-eliminar">
+                        <button type="submit" class="btn-eliminar">Eliminar</button>
+                    </form>
+                </div>
+                {% endfor %}
                 {% else %}
-                    <p class="no-publicaciones">Aún no has publicado ningún producto.</p>
+                <p class="no-publicaciones">Aún no has publicado ningún producto.</p>
                 {% endif %}
             </div>
 
@@ -169,7 +168,8 @@
         });
     </script>
     <!-- SCRIPTS -->
-    <script src="{{ url_for('static', filename='js/buscar_local.js') }}"></script>        
+    <script src="{{ url_for('static', filename='js/buscar_local.js') }}"></script>
     <script src="{{ url_for('static', filename='js/vendedor.js') }}"></script>
 </body>
+
 </html>
