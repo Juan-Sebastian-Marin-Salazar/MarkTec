@@ -13,9 +13,9 @@
     <!-- HEADER FIJO -->
     <header class="fixed-header">
         <div class="header-content">
-            <button class="back-button" onclick="window.history.back()">
+            <a href="{{ url_for('auth.home') }}" class="back-button">
                 <span class="back-icon">← {{ producto.titulo}}</span>
-            </button>
+            </a>
         </div>
     </header>
 

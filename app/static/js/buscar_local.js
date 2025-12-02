@@ -40,6 +40,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const descripcion = descripcionEl ? descripcionEl.textContent.trim() : "";
             const vendedor = vendedorEl ? vendedorEl.textContent.trim() : "";
             const thumb = (imgEl && imgEl.src) ? imgEl.src : "/static/img/default.png";
+            
+            // Extract product ID from onclick attribute or data attribute
+            // The producto element has onclick="window.location='/producto/{{ pub.idPublicaciones }}'"
+            const onclickAttr = el.getAttribute("onclick");
+            let productId = null;
+            if (onclickAttr && onclickAttr.includes("/producto/")) {
+                const match = onclickAttr.match(/\/producto\/(\d+)/);
+                if (match) productId = match[1];
+            }
 
             index.push({
                 el,
@@ -47,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 descripcion,
                 vendedor,
                 thumb,
+                productId,
                 searchable: normalize(`${titulo} ${descripcion} ${vendedor}`)
             });
         });
@@ -95,9 +105,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 `;
                 div.addEventListener("click", () => {
-                    input.value = item.titulo;
-                    aplicarFiltro(item.titulo);
-                    hideDropdown();
+                    // Navigate to product detail page
+                    if (item.productId) {
+                        window.location.href = `/producto/${item.productId}`;
+                    } else {
+                        // Fallback: just filter and highlight
+                        input.value = item.titulo;
+                        aplicarFiltro(item.titulo);
+                        hideDropdown();
+                    }
                 });
                 resultsBox.appendChild(div);
             });

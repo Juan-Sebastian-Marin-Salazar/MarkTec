@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Producto</title>
+    <link rel="stylesheet" href="../../static/css/nuevo_producto.css">
+    <style>
+        /* Small tweak so existing previews look distinct */
+        .existing { opacity: 0.9; border: 2px solid #ddd; }
+        .image-meta { display:inline-block; margin:4px; text-align:center; font-size:0.9rem; }
+    </style>
+</head>
+<body>
+    <header class="fixed-header">
+        <div class="header-content">
+            <a href="{{ url_for('auth.home') }}" class="back-button">
+                <span><~</span>
+            </a>
+            <h1>Editar Producto</h1>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="form-container">
+
+            <hr class="divider">
+
+            <form id="product-form" class="product-form" method="POST" action="{{ url_for('auth.editar_producto', pub_id=producto.idPublicaciones) }}" enctype="multipart/form-data" onsubmit="prepararFormulario(event)">
+                <!-- Sección de imagen -->
+                <section class="form-section">
+                    <h2>Imagen del Producto *</h2>
+                    <div class="image-upload-container">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">📷</div>
+                            <p class="upload-title">Sube una imagen</p>
+                            <p class="upload-subtitle">Formatos: JPG, PNG o WEBP (máx. 5MB)</p>
+                            <input type="file" id="imageInput" name="imagenes" accept=".jpg,.jpeg,.png,.webp" multiple class="file-input">
+                            <label for="imageInput" class="file-label">Seleccionar Archivo</label>
+                        </div>
+                        <div id="imagePreview" class="image-preview">
+                            {% if imagenes %}
+                                {% for img in imagenes %}
+                                        <div class="image-meta" data-img-id="{{ img.idImagenesPublicacion }}">
+                                            <img src="{{ img.url }}" alt="imagen" class="preview-img existing">
+                                            <button type="button" class="btn-eliminar-img" data-img-id="{{ img.idImagenesPublicacion }}">Eliminar</button>
+                                        </div>
+                                    {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div id="imageCount" class="image-count">{{ imagenes|length if imagenes else 0 }}/6</div>
+                </section>
+
+                <hr class="divider">
+                <!-- Información del producto -->
+                <section class="form-section">
+                    <h2>Información del Producto</h2>
+                    <!-- Nombre del producto -->
+                    <div class="form-group">
+                        <label for="titulo" class="form-label">
+                            Nombre del Producto *
+                        </label>
+                        <input 
+                            type="text" 
+                            id="titulo" 
+                            name="titulo"
+                            class="form-input"
+                            maxlength="100"
+                            placeholder="Ej: Tacos al Pastor - Orden de 3"
+                            required
+                            value="{{ producto.titulo }}"
+                        >
+                    </div>
+                    <!-- Edificio -->
+                    <div class="form-group">
+                    <label for="edificio" class="form-label">Edificio *</label>
+                    <select name="edificio" id="edificio" class="form-select" required>
+                        <option value="" disabled>Selecciona un punto de entrega</option>
+                        <option value="U (bancas)" {% if producto.edificio == 'U (bancas)' %}selected{% endif %}>U (bancas)</option>
+                        <option value="L (bancas)" {% if producto.edificio == 'L (bancas)' %}selected{% endif %}>L (bancas)</option>
+                        <option value="F (bancas)" {% if producto.edificio == 'F (bancas)' %}selected{% endif %}>F (bancas)</option>
+                    </select>
+                    </div>
+                    <!-- Categoría -->
+                    <div class="form-group">
+                        <label for="category" class="form-label">
+                            Categoría *
+                        </label>
+                        <select id="category" name="categoria" class="form-select" required>
+                            <option value="" disabled>Selecciona una categoría</option>
+                            {% for cat in categorias %}
+                                <option value="{{ cat.idCategorias }}" {% if cat.idCategorias == categoria_actual %}selected{% endif %}>{{ cat.nombre_categoria }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Precio -->
+                    <div class="form-group">
+                        <label for="precio" class="form-label">
+                            Precio (MXN) *
+                        </label>
+                        <div class="price-input-container">
+                            <span class="currency-symbol">$</span>
+                            <input 
+                                type="number" 
+                                id="precio" 
+                                name="precio"
+                                class="form-input price-input"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                                required
+                                value="{{ producto.precio }}"
+                            >
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <!-- Descripción -->
+                    <div class="form-group">
+                        <label for="descripcion" class="form-label">
+                            Descripción *
+                        </label>
+                        <textarea 
+                            id="descripcion" 
+                            name="descripcion"
+                            class="form-textarea"
+                            maxlength="500"
+                            placeholder="Describe tu producto detalladamente. Incluye características, ingredientes, especificaciones, etc."
+                            required
+                        >{{ producto.descripcion }}</textarea>
+                    </div>
+                </section>
+
+                <!-- Botones -->
+                <div class="form-buttons">
+                    <button type="button" class="cancel-btn" onclick="window.history.back()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="submit-btn">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="../../static/js/nuevo_producto.js"></script>
+    <script>
+        const imagenesToDelete = new Set();
+
+        function marcarImagenParaEliminar(imgId, btn) {
+            const container = btn.closest('.image-meta');
+            if (imagenesToDelete.has(imgId)) {
+                imagenesToDelete.delete(imgId);
+                container.style.opacity = '1';
+                btn.textContent = 'Eliminar';
+                btn.classList.remove('marked-for-deletion');
+            } else {
+                imagenesToDelete.add(imgId);
+                container.style.opacity = '0.5';
+                btn.textContent = 'Deshacer';
+                btn.classList.add('marked-for-deletion');
+            }
+            // actualizar contador visible (existing not marked + selected previews)
+            const existingNodes = Array.from(document.querySelectorAll('#imagePreview .image-meta')).filter(n => !n.classList.contains('marked-for-deletion') && !n.hasAttribute('data-selected'));
+            const selectedCount = document.querySelectorAll('#imagePreview .image-meta[data-selected="true"]').length || 0;
+            const total = existingNodes.length + selectedCount;
+            const imageCountEl = document.getElementById('imageCount');
+            if (imageCountEl) imageCountEl.textContent = `${total}/6`;
+        }
+
+        function prepararFormulario(event) {
+            const form = document.getElementById('product-form');
+            imagenesToDelete.forEach(imgId => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'imagenes_a_eliminar';
+                input.value = imgId;
+                form.appendChild(input);
+            });
+        }
+
+        // Event delegation for delete buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-eliminar-img')) {
+                const imgId = parseInt(e.target.dataset.imgId);
+                marcarImagenParaEliminar(imgId, e.target);
+            }
+        });
+    </script>
+</body>
+</html>
