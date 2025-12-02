@@ -132,15 +132,15 @@
                     <p class="descripcion detalle">{{ pub.descripcion or 'Sin descripción' }}</p>
                     <p class="precio detalle">${{ "%.2f"|format(pub.precio) }}</p>
 
-                        <!-- BOTÓN ELIMINAR -->
-                        <div class="vendedor-actions">
-                            <a href="/editar-producto/{{ pub.idPublicaciones }}" class="btn-editar">Editar</a>
-                            <form action="/eliminar-producto/{{ pub.idPublicaciones }}" method="POST" class="form-eliminar">
-                                <button type="submit" class="btn-eliminar">Eliminar</button>
-                            </form>
-                        </div>
+                    <!-- BOTÓN ELIMINAR -->
+                    <div class="vendedor-actions">
+                        <a href="/editar-producto/{{ pub.idPublicaciones }}" class="btn-editar">Editar</a>
+                        <form action="/eliminar-producto/{{ pub.idPublicaciones }}" method="POST" class="form-eliminar">
+                            <button type="submit" class="btn-eliminar">Eliminar</button>
+                        </form>
                     </div>
-                    {% endfor %}
+                </div>
+                {% endfor %}
                 {% else %}
                 <p class="no-publicaciones">Aún no has publicado ningún producto.</p>
                 {% endif %}

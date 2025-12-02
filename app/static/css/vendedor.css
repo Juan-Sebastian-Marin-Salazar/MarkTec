@@ -64,42 +64,50 @@
 }
 
 /* Controles para productos propios en modo vendedor */
-.controles-producto {
-    display: none;
-    margin-top: 15px;
-    gap: 10px;
-    justify-content: center;
-}
-
-.producto.mostrar-controles .controles-producto {
+/* Contenedor de los botones */
+.vendedor-actions {
     display: flex;
+    /* ESTA ES LA CLAVE: 'space-between' empuja los elementos a los extremos */
+    justify-content: space-between; 
+    align-items: center; /* Alinea verticalmente */
+    width: 100%; /* Asegura que ocupe todo el ancho disponible */
+    margin-top: 15px;
 }
 
+/* Estilos de los botones */
 .btn-editar, .btn-eliminar {
+    display: inline-block; /* Para que respeten padding */
     padding: 8px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px; /* Un poco más legible */
+    font-weight: 500;
+    text-decoration: none; /* Quita subrayado del link */
     transition: all 0.3s ease;
 }
 
 .btn-editar {
-    background: #ed8936;
+    background-color: #ff6600;
     color: white;
 }
 
 .btn-editar:hover {
-    background: #dd7711;
+    background-color: #ff8533;
 }
 
 .btn-eliminar {
-    background: #f56565;
+    background-color: #ff6600;
     color: white;
 }
 
 .btn-eliminar:hover {
-    background: #e53e3e;
+    background-color: #ff8533;
+}
+
+/* Asegura que el formulario no ocupe espacio extra innecesario */
+.form-eliminar {
+    margin: 0;
 }
 /* Forzar estilo del botón "Agregar Producto" */
 a.btn-agregar,

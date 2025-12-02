@@ -7,8 +7,13 @@
   <link rel="stylesheet" href="../../static/css/transacciones.css">
 </head>
 <body>
-  <a href="{{ url_for('auth.home') }}" class="back-button"><~</a>
-  <h2>Mis Transacciones</h2>
+   <header class="fixed-header">
+        <div class="header-content">
+            <a href="{{ url_for('auth.home') }}" class="back-button">
+                <span>← Mi transacciones</span>
+            </a>
+        </div>
+    </header>
   <table class="table">
     <thead>
       <tr>

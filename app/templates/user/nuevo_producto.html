@@ -12,9 +12,9 @@
     <!-- Header fijo -->
     <header class="fixed-header">
         <div class="header-content">
-            <button class="back-button" onclick="window.history.back()">
-                <span class="back-icon">← volver</span>
-            </button>
+            <a href="{{ url_for('auth.home') }}" class="back-button">
+                <span>← Editar Producto</span>
+            </a>
         </div>
     </header>
 
