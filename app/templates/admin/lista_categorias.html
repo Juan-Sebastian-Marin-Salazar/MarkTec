@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Administrar Categorías</title>
+    <link rel="stylesheet" href="../../static/css/admin-lista.css">
+</head>
+<body>
+
+    <a href="{{ url_for('auth.admin') }}" class="btn-back">← Volver al Inicio</a>
+
+    <div class="page-header">
+        <h1 class="page-title">Categorías</h1>
+        <a href="#" class="btn-add">Agregar Categoría</a>
+    </div>
+
+    <div class="table-container">
+        <table class="table-list">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">ID</th>
+                    <th>Nombre de Categoría</th>
+                    <th>Estado</th>
+                    <th style="width: 150px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in categorias %}
+                <tr>
+                    <td>{{ c.idCategorias }}</td>
+                    <td><strong>{{ c.nombre_categoria }}</strong></td>
+                    <td>
+                        {% if c.esta_activa %}
+                            <span class="status-active">Activa</span>
+                        {% else %}
+                            <span class="status-inactive">Inactiva</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="#" class="btn-action btn-edit">Modificar</a>
+                            <form action="#" method="POST">
+                                <button type="submit" class="btn-action btn-delete">Eliminar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align:center; color:#666;">No hay categorías registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Administrar Edificios</title>
+    <link rel="stylesheet" href="../../static/css/admin-lista.css">
+</head>
+<body>
+
+    <a href="{{ url_for('auth.admin') }}" class="btn-back">← Volver al Inicio</a>
+
+    <div class="page-header">
+        <h1 class="page-title">Edificios</h1>
+        <a href="#" class="btn-add">Agregar Edificio</a>
+    </div>
+
+    <div class="table-container">
+        <table class="table-list">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">ID</th>
+                    <th>Nombre del Edificio</th>
+                    <th>Descripción / Ubicación</th>
+                    <th style="width: 150px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in edificios %}
+                <tr>
+                    <td>{{ e.idEdificio }}</td>
+                    <td><strong>{{ e.nombre }}</strong></td>
+                    <td>{{ e.descripcion if e.descripcion else '-' }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="#" class="btn-action btn-edit">Modificar</a>
+                            <form action="#" method="POST">
+                                <button type="submit" class="btn-action btn-delete">Eliminar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align:center; color:#666;">No hay edificios registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

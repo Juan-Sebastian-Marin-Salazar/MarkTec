@@ -1,0 +1,107 @@
+/* --- CONFIGURACIÓN BASE (Fondo oscuro) --- */
+.admin-body {
+    background-color: #121212; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #e0e0e0;
+    padding: 20px;
+}
+
+/* Contenedor para dar márgenes */
+.module {
+    margin-bottom: 30px;
+    background-color: #1e1e1e; 
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+/* --- ESTILOS DE LA TABLA --- */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+/* EL ENCABEZADO AZUL (Caption) */
+.table caption {
+    background-color: #5f8098;
+    color: white;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    caption-side: top; 
+}
+
+/* --- FILAS Y CELDAS --- */
+.table tbody tr {
+    border-bottom: 1px solid #333;
+    transition: background-color 0.2s;
+}
+
+.table tbody tr:hover {
+    background-color: #2c2c2c; 
+}
+
+.table th, .table td {
+    padding: 12px 15px;
+}
+
+/* Primera columna (El nombre del modelo) */
+.table th {
+    font-weight: normal;
+    width: 60%; 
+}
+
+.table th a {
+    color: #60a5fa; 
+    text-decoration: none;
+    font-size: 15px;
+}
+
+.table th a:hover {
+    text-decoration: underline;
+}
+
+.action-cell {
+    text-align: right; 
+    white-space: nowrap; 
+    width: 15%;
+}
+
+/* --- BOTONES DE ACCIÓN CON ICONOS CSS --- */
+.addlink, .changelink {
+    text-decoration: none;
+    color: #cfd8dc;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.2s;
+}
+
+.addlink::before {
+    content: "+"; 
+    font-size: 18px;
+    color: #7cbd6d; 
+    font-weight: bold;
+    line-height: 1;
+}
+
+.addlink:hover {
+    color: white;
+}
+
+.changelink::before {
+    content: "✎"; 
+    font-size: 16px;
+    color: #eab308; 
+    transform: rotate(90deg); 
+}
+
+.changelink:hover {
+    color: white;
+}
