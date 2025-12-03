@@ -148,7 +148,22 @@ body {
     gap: 10px;
     width: 100%;
 }
-
+.admin{
+        flex: 1;
+    padding: 8px 8px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: normal;
+    color: #4a5568;
+    font-size: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: gold;
+    color: #fff;
+}
 .cliente,
 .vendor {
     flex: 1;
@@ -180,6 +195,8 @@ body {
     background-color: #0066CC;
     color: #FFF;
 }
+
+
 
 /* #endregion menu */
 

@@ -119,10 +119,77 @@
 }
 
 /* Subida de imágenes */
+/* EL CONTENEDOR (Igual que .imagenes-secundarias) */
+.image-preview {
+    display: grid;
+    /* Usamos minmax(80px, 1fr) para que se parezcan a tus miniaturas */
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+    width: 100%;
+}
+
+/* LA CAJA DE CADA FOTO (Igual que .imagen-miniatura) */
+.image-meta {
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Cuadrado perfecto */
+    border-radius: 5px;
+    overflow: hidden; /* Corta lo que salga del borde */
+    border: 2px solid #e2e8f0; /* Un borde suave */
+    background-color: #fff; /* Fondo blanco */
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Efecto al pasar el mouse (Opcional, para que se vea interactivo) */
+.image-meta:hover {
+    border-color: #4299e1;
+}
+
+/* LA IMAGEN ADENTRO */
+.image-meta img.preview-img {
+    width: 100%;
+    height: 100%;
+    
+    /* AQUÍ ELIGES TU PREFERENCIA: */
+    
+    /* Opción A (Tu código de miniaturas): Recorta los bordes para llenar el cuadro */
+    /* object-fit: cover; */
+
+    /* Opción B (Lo que pediste antes): Muestra la foto ENTERA sin recortar nada */
+    object-fit: contain; 
+    
+    display: block;
+}
 .image-upload-container {
     margin-bottom: 10px;
 }
+/* Aseguramos que el contenedor permita elementos flotantes encima */
+.image-meta {
+    position: relative; /* Esto ya debería estar, pero asegúrate */
+}
 
+/* Estilo para el botón de eliminar */
+.btn-eliminar-img {
+    position: absolute; /* Flota sobre la imagen */
+    top: 5px;           /* Distancia desde arriba */
+    right: 5px;         /* Distancia desde la derecha */
+    
+    background-color: rgba(229, 62, 62, 0.9); /* Rojo semitransparente (#e53e3e) */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10; /* Asegura que esté encima de la imagen */
+    transition: background 0.2s;
+}
+
+.btn-eliminar-img:hover {
+    background-color: #c53030; /* Rojo más oscuro al pasar el mouse */
+}
 
 .upload-area {
     border: 2px dashed #cbd5e0;

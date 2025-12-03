@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>{% if edificio %}Editar Edificio{% else %}Nuevo Edificio{% endif %}</title>
-    <link rel="stylesheet" href="../../static/css/admin.css">
-    <link rel="stylesheet" href="../../static/css/admin-lista.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-lista.css') }}">
     <style>.form-row{margin:12px 0}</style>
 </head>
 <body class="admin-body">
