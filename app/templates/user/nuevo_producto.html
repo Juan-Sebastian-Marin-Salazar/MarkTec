@@ -59,9 +59,9 @@
                         <label for="edificio" class="form-label">Edificio *</label>
                         <select name="edificio" id="edificio" class="form-select" required>
                             <option value="" disabled selected>Selecciona un punto de entrega</option>
-                            <option value="U (bancas)">U (bancas)</option>
-                            <option value="L (bancas)">L (bancas)</option>
-                            <option value="F (bancas)">F (bancas)</option>
+                            {% for ed in edificios %}
+                                <option value="{{ ed.idEdificio }}">{{ ed.nombre }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <!-- Categoría -->

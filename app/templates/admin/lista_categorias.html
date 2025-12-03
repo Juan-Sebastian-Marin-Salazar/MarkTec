@@ -11,7 +11,7 @@
 
     <div class="page-header">
         <h1 class="page-title">Categorías</h1>
-        <a href="#" class="btn-add">Agregar Categoría</a>
+        <a href="{{ url_for('auth.admin_categoria_nuevo') }}" class="btn-add">Agregar Categoría</a>
     </div>
 
     <div class="table-container">
@@ -38,8 +38,8 @@
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <a href="#" class="btn-action btn-edit">Modificar</a>
-                            <form action="#" method="POST">
+                            <a href="{{ url_for('auth.admin_categoria_editar', id=c.idCategorias) }}" class="btn-action btn-edit">Modificar</a>
+                            <form action="{{ url_for('auth.admin_categoria_eliminar', id=c.idCategorias) }}" method="POST" onsubmit="return confirm('¿Eliminar esta categoría?')">
                                 <button type="submit" class="btn-action btn-delete">Eliminar</button>
                             </form>
                         </div>

@@ -41,7 +41,7 @@
             <!-- INFORMACIÓN -->
             <div class="producto-info">
                 <h2 class="producto-titulo">{{ producto.titulo }}</h2>
-                <p><strong>Edificio:</strong> {{ producto.edificio }}</p>
+                <p><strong>Edificio:</strong> {{ producto.edificio_nombre if producto.edificio_nombre else producto.edificio }}</p>
                 <p class="precio">${{ "%.2f"|format(producto.precio) }}</p>
                 
                 <div class="descripcion">

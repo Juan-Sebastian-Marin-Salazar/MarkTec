@@ -9,6 +9,27 @@ from werkzeug.utils import secure_filename
 
 bp = Blueprint("auth", __name__)
 
+# ---------- VERIFICAR SI USUARIO ES ADMIN ----------
+def user_is_admin(user_id):
+    """
+    Return True if the given user has the 'administrador' role.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT COUNT(*) FROM usuarios_roles ur
+            JOIN roles r ON ur.id_rol = r.idRoles
+            WHERE ur.id_usuario = %s AND r.nombre_rol = 'administrador'
+        """, (user_id,))
+        row = cursor.fetchone()
+        cnt = row[0] if row else 0
+        cursor.close()
+        conn.close()
+        return cnt > 0
+    except Exception:
+        return False
+
 @bp.route("/")
 def index():
     return redirect(url_for("auth.login"))
@@ -207,20 +228,29 @@ def nuevo_producto():
         """)
         categorias = cursor.fetchall()
 
+        # cargar edificios disponibles
+        cursor.execute("""
+            SELECT idEdificio, nombre
+            FROM edificios
+            WHERE esta_activa = 1
+            ORDER BY nombre
+        """)
+        edificios = cursor.fetchall()
+
         cursor.close()
         conn.close()
 
-        return render_template("user/nuevo_producto.html", categorias=categorias)
+        return render_template("user/nuevo_producto.html", categorias=categorias, edificios=edificios)
 
     # ==== POST: Crear publicación ====
     titulo = request.form.get("titulo")
     descripcion = request.form.get("descripcion")
     precio = request.form.get("precio")
     categoria_id = request.form.get("categoria")
-    edificio = request.form.get("edificio")
+    edificio_id = request.form.get("edificio")
     imagenes = request.files.getlist("imagenes")
     
-    if not titulo or not precio or not categoria_id or not edificio:
+    if not titulo or not precio or not categoria_id or not edificio_id:
         flash("Título, precio, categoría y edificio son obligatorios.")
         return redirect(url_for("auth.nuevo_producto"))
 
@@ -229,9 +259,9 @@ def nuevo_producto():
 
     # 1. Insertar la publicación
     cursor.execute("""
-        INSERT INTO publicaciones (id_vendedor, titulo, descripcion, precio, edificio)
+        INSERT INTO publicaciones (id_vendedor, titulo, descripcion, precio, id_edificio)
         VALUES (%s, %s, %s, %s, %s)
-    """, (session["usuario_id"], titulo, descripcion, precio, edificio))
+    """, (session["usuario_id"], titulo, descripcion, precio, edificio_id))
     conn.commit()
     publicacion_id = cursor.lastrowid
 
@@ -312,6 +342,12 @@ def editar_producto(pub_id):
         cursor.execute("SELECT idImagenesPublicacion, url, orden FROM imagenes_publicacion WHERE id_publicacion=%s ORDER BY orden ASC", (pub_id,))
         imagenes = cursor.fetchall()
 
+        # cargar edificios y edificio actual (si existe)
+        cursor.execute("SELECT idEdificio, nombre FROM edificios WHERE esta_activa = 1 ORDER BY nombre")
+        edificios = cursor.fetchall()
+
+        edificio_actual = producto.get('id_edificio') if producto else None
+
         cursor.close()
         conn.close()
 
@@ -320,7 +356,9 @@ def editar_producto(pub_id):
             producto=producto,
             categorias=categorias,
             imagenes=imagenes,
-            categoria_actual=categoria_actual
+            categoria_actual=categoria_actual,
+            edificios=edificios,
+            edificio_actual=edificio_actual
         )
 
     # POST: guardar cambios
@@ -328,11 +366,11 @@ def editar_producto(pub_id):
     descripcion = request.form.get("descripcion")
     precio = request.form.get("precio")
     categoria_id = request.form.get("categoria")
-    edificio = request.form.get("edificio")
+    edificio_id = request.form.get("edificio")
     imagenes_nuevas = request.files.getlist("imagenes")
     imagenes_a_eliminar = request.form.getlist("imagenes_a_eliminar")
 
-    if not titulo or not precio or not categoria_id or not edificio:
+    if not titulo or not precio or not categoria_id or not edificio_id:
         flash("Título, precio, categoría y edificio son obligatorios.")
         return redirect(url_for("auth.editar_producto", pub_id=pub_id))
 
@@ -365,9 +403,9 @@ def editar_producto(pub_id):
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE publicaciones
-        SET titulo=%s, descripcion=%s, precio=%s, edificio=%s
+        SET titulo=%s, descripcion=%s, precio=%s, id_edificio=%s
         WHERE idPublicaciones=%s
-    """, (titulo, descripcion, precio, edificio, pub_id))
+    """, (titulo, descripcion, precio, edificio_id, pub_id))
     conn.commit()
 
     # Reemplazar categoría (simple enfoque: borrar y volver a insertar)
@@ -421,11 +459,12 @@ def detalle_producto(pub_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Obtener datos del producto (incluye telefono del vendedor)
+    # Obtener datos del producto (incluye telefono del vendedor y nombre de edificio si existe)
     cursor.execute("""
-        SELECT p.*, u.nombre AS vendedor, u.telefono AS telefono_vendedor
+        SELECT p.*, u.nombre AS vendedor, u.telefono AS telefono_vendedor, e.nombre AS edificio_nombre
         FROM publicaciones p
         JOIN usuarios u ON p.id_vendedor = u.idUsuarios
+        LEFT JOIN edificios e ON p.id_edificio = e.idEdificio
         WHERE p.idPublicaciones = %s
     """, (pub_id,))
     producto = cursor.fetchone()
@@ -656,6 +695,390 @@ def mis_transacciones():
     conn.close()
 
     return render_template("user/mis_transacciones.html", transacciones=transacciones)
+
+# ------------------ ADMIN INTERFACE (restricted) ------------------
+@bp.route('/admin')
+def admin():
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    return render_template('admin/admin.html')
+
+# ---------- ADMIN: LISTA DE EDIFICIOS ----------
+@bp.route('/admin/edificios')
+def admin_edificios():
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    edificios = []
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT idEdificio, nombre, descripcion, esta_activa FROM edificios ORDER BY idEdificio ASC')
+        edificios = cursor.fetchall()
+        cursor.close()
+        conn.close()
+    except Exception:
+        edificios = []
+
+    return render_template('admin/lista_edificio.html', edificios=edificios)
+
+# ---------- ADMIN: LISTA DE USUARIOS ----------
+@bp.route('/admin/usuarios')
+def admin_usuarios():
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    usuarios = []
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT u.idUsuarios, u.nombre, u.correo, u.matricula, u.eliminado_en,
+                   (SELECT GROUP_CONCAT(r.nombre_rol SEPARATOR ', ') FROM usuarios_roles ur JOIN roles r ON ur.id_rol = r.idRoles WHERE ur.id_usuario = u.idUsuarios) AS rol
+            FROM usuarios u
+            ORDER BY u.idUsuarios ASC
+        """)
+        usuarios = cursor.fetchall()
+        cursor.close()
+        conn.close()
+    except Exception:
+        usuarios = []
+
+    return render_template('admin/lista_usuarios.html', usuarios=usuarios)
+
+# ---------- ADMIN: LISTA DE CATEGORÍAS ----------
+@bp.route('/admin/categorias')
+def admin_categorias():
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    categorias = []
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT idCategorias, nombre_categoria, esta_activa FROM categorias ORDER BY idCategorias ASC')
+        categorias = cursor.fetchall()
+        cursor.close()
+        conn.close()
+    except Exception:
+        categorias = []
+
+    return render_template('admin/lista_categorias.html', categorias=categorias)
+
+# ---------- ADMIN: CREAR EDIFICIO ----------
+@bp.route('/admin/edificios/nuevo', methods=['GET', 'POST'])
+def admin_edificio_nuevo():
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    if request.method == 'GET':
+        return render_template('admin/form_edificio.html', edificio=None)
+
+    nombre = request.form.get('nombre')
+    descripcion = request.form.get('descripcion')
+    esta_activa = 1 if request.form.get('esta_activa') == 'on' else 0
+
+    if not nombre:
+        flash('El nombre es obligatorio.')
+        return redirect(url_for('auth.admin_edificio_nuevo'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO edificios (nombre, descripcion, esta_activa) VALUES (%s, %s, %s)', (nombre, descripcion, esta_activa))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash('Edificio creado correctamente.')
+    return redirect(url_for('auth.admin_edificios'))
+
+
+# ---------- ADMIN: EDITAR EDIFICIO ----------
+@bp.route('/admin/edificios/editar/<int:id>', methods=['GET', 'POST'])
+def admin_edificio_editar(id):
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT idEdificio, nombre, descripcion, esta_activa FROM edificios WHERE idEdificio=%s', (id,))
+    ed = cursor.fetchone()
+
+    if not ed:
+        cursor.close()
+        conn.close()
+        flash('Edificio no encontrado.')
+        return redirect(url_for('auth.admin_edificios'))
+
+    if request.method == 'GET':
+        cursor.close()
+        conn.close()
+        return render_template('admin/form_edificio.html', edificio=ed)
+
+    # POST: actualizar
+    nombre = request.form.get('nombre')
+    descripcion = request.form.get('descripcion')
+    esta_activa = 1 if request.form.get('esta_activa') == 'on' else 0
+
+    if not nombre:
+        flash('El nombre es obligatorio.')
+        return redirect(url_for('auth.admin_edificio_editar', id=id))
+
+    cursor.execute('UPDATE edificios SET nombre=%s, descripcion=%s, esta_activa=%s WHERE idEdificio=%s', (nombre, descripcion, esta_activa, id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash('Edificio actualizado.')
+    return redirect(url_for('auth.admin_edificios'))
+
+
+# ---------- ADMIN: ELIMINAR EDIFICIO (soft) ----------
+@bp.route('/admin/edificios/eliminar/<int:id>', methods=['POST'])
+def admin_edificio_eliminar(id):
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE edificios SET esta_activa = 0 WHERE idEdificio=%s', (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash('Edificio desactivado.')
+    return redirect(url_for('auth.admin_edificios'))
+
+
+# ---------- ADMIN: CREAR CATEGORIA ----------
+@bp.route('/admin/categorias/nuevo', methods=['GET', 'POST'])
+def admin_categoria_nuevo():
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    if request.method == 'GET':
+        return render_template('admin/form_categoria.html', categoria=None)
+
+    nombre = request.form.get('nombre')
+    esta_activa = 1 if request.form.get('esta_activa') == 'on' else 0
+
+    if not nombre:
+        flash('El nombre es obligatorio.')
+        return redirect(url_for('auth.admin_categoria_nuevo'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO categorias (nombre_categoria, id_creador, esta_activa) VALUES (%s, NULL, %s)', (nombre, esta_activa))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash('Categoría creada correctamente.')
+    return redirect(url_for('auth.admin_categorias'))
+
+
+# ---------- ADMIN: EDITAR CATEGORIA ----------
+@bp.route('/admin/categorias/editar/<int:id>', methods=['GET', 'POST'])
+def admin_categoria_editar(id):
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT idCategorias, nombre_categoria, esta_activa FROM categorias WHERE idCategorias=%s', (id,))
+    c = cursor.fetchone()
+
+    if not c:
+        cursor.close()
+        conn.close()
+        flash('Categoría no encontrada.')
+        return redirect(url_for('auth.admin_categorias'))
+
+    if request.method == 'GET':
+        cursor.close()
+        conn.close()
+        return render_template('admin/form_categoria.html', categoria=c)
+
+    nombre = request.form.get('nombre')
+    esta_activa = 1 if request.form.get('esta_activa') == 'on' else 0
+
+    if not nombre:
+        flash('El nombre es obligatorio.')
+        return redirect(url_for('auth.admin_categoria_editar', id=id))
+
+    cursor.execute('UPDATE categorias SET nombre_categoria=%s, esta_activa=%s WHERE idCategorias=%s', (nombre, esta_activa, id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash('Categoría actualizada.')
+    return redirect(url_for('auth.admin_categorias'))
+
+
+# ---------- ADMIN: ELIMINAR CATEGORIA (soft) ----------
+@bp.route('/admin/categorias/eliminar/<int:id>', methods=['POST'])
+def admin_categoria_eliminar(id):
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE categorias SET esta_activa = 0 WHERE idCategorias=%s', (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash('Categoría desactivada.')
+    return redirect(url_for('auth.admin_categorias'))
+
+
+# ---------- ADMIN: ELIMINAR USUARIO ----------
+@bp.route('/admin/usuarios/eliminar/<int:id>', methods=['POST'])
+def admin_usuario_eliminar(id):
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE usuarios SET eliminado_en = NOW() WHERE idUsuarios=%s', (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash('Usuario marcado como eliminado.')
+    return redirect(url_for('auth.admin_usuarios'))
+
+
+# ---------- ADMIN: CREAR USUARIO ----------
+@bp.route('/admin/usuarios/nuevo', methods=['GET', 'POST'])
+def admin_usuario_nuevo():
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    if request.method == 'GET':
+        return render_template('admin/form_usuario.html', usuario=None)
+
+    nombre = request.form.get('nombre')
+    correo = request.form.get('correo')
+    matricula = request.form.get('matricula')
+    password = request.form.get('password')
+
+    if not nombre or not correo:
+        flash('Nombre y correo son obligatorios.')
+        return redirect(url_for('auth.admin_usuario_nuevo'))
+
+    clave_hash = None
+    if password:
+        clave_hash = hashlib.sha256(password.encode()).hexdigest()
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        if clave_hash:
+            cursor.execute('INSERT INTO usuarios (nombre, correo, matricula, clave_hash) VALUES (%s, %s, %s, %s)', (nombre, correo, matricula, clave_hash))
+        else:
+            cursor.execute('INSERT INTO usuarios (nombre, correo, matricula, clave_hash) VALUES (%s, %s, %s, %s)', (nombre, correo, matricula, ''))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        flash(f'Error al crear usuario: {e}')
+        return redirect(url_for('auth.admin_usuario_nuevo'))
+
+    flash('Usuario creado correctamente.')
+    return redirect(url_for('auth.admin_usuarios'))
+
+
+# ---------- ADMIN: EDITAR USUARIO ----------
+@bp.route('/admin/usuarios/editar/<int:id>', methods=['GET', 'POST'])
+def admin_usuario_editar(id):
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    if not user_is_admin(session['usuario_id']):
+        flash('Acceso denegado: se requieren permisos de administrador.')
+        return redirect(url_for('auth.home'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT idUsuarios, nombre, correo, matricula FROM usuarios WHERE idUsuarios=%s', (id,))
+    u = cursor.fetchone()
+
+    if not u:
+        cursor.close()
+        conn.close()
+        flash('Usuario no encontrado.')
+        return redirect(url_for('auth.admin_usuarios'))
+
+    if request.method == 'GET':
+        cursor.close()
+        conn.close()
+        return render_template('admin/form_usuario.html', usuario=u)
+
+    nombre = request.form.get('nombre')
+    correo = request.form.get('correo')
+    matricula = request.form.get('matricula')
+    password = request.form.get('password')
+
+    if not nombre or not correo:
+        flash('Nombre y correo son obligatorios.')
+        return redirect(url_for('auth.admin_usuario_editar', id=id))
+
+    try:
+        if password:
+            clave_hash = hashlib.sha256(password.encode()).hexdigest()
+            cursor.execute('UPDATE usuarios SET nombre=%s, correo=%s, matricula=%s, clave_hash=%s WHERE idUsuarios=%s', (nombre, correo, matricula, clave_hash, id))
+        else:
+            cursor.execute('UPDATE usuarios SET nombre=%s, correo=%s, matricula=%s WHERE idUsuarios=%s', (nombre, correo, matricula, id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        flash(f'Error al actualizar usuario: {e}')
+        return redirect(url_for('auth.admin_usuario_editar', id=id))
+
+    flash('Usuario actualizado.')
+    return redirect(url_for('auth.admin_usuarios'))
 
 # ---------- PÁGINA PRINCIPAL ----------
 @bp.route("/pagina_principar")

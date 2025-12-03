@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if edificio %}Editar Edificio{% else %}Nuevo Edificio{% endif %}</title>
+    <link rel="stylesheet" href="../../static/css/admin.css">
+    <link rel="stylesheet" href="../../static/css/admin-lista.css">
+    <style>.form-row{margin:12px 0}</style>
+</head>
+<body class="admin-body">
+    <a href="{{ url_for('auth.admin_edificios') }}" class="btn-back">← Volver</a>
+
+    <div class="page-header">
+        <h1 class="page-title">{% if edificio %}Editar Edificio{% else %}Nuevo Edificio{% endif %}</h1>
+    </div>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-row">
+                <label>Nombre</label><br>
+                <input type="text" name="nombre" value="{{ edificio.nombre if edificio else '' }}" required>
+            </div>
+            <div class="form-row">
+                <label>Descripción</label><br>
+                <textarea name="descripcion">{{ edificio.descripcion if edificio else '' }}</textarea>
+            </div>
+            <div class="form-row">
+                <label><input type="checkbox" name="esta_activa" {% if edificio and edificio.esta_activa %}checked{% endif %}> Activa</label>
+            </div>
+            <div class="form-row">
+                <button type="submit">Guardar</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

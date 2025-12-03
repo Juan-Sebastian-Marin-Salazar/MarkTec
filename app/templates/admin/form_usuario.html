@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if usuario %}Editar Usuario{% else %}Nuevo Usuario{% endif %}</title>
+    <link rel="stylesheet" href="../../static/css/admin.css">
+    <link rel="stylesheet" href="../../static/css/admin-lista.css">
+    <style>.form-row{margin:12px 0}</style>
+</head>
+<body class="admin-body">
+    <a href="{{ url_for('auth.admin_usuarios') }}" class="btn-back">← Volver</a>
+
+    <div class="page-header">
+        <h1 class="page-title">{% if usuario %}Editar Usuario{% else %}Nuevo Usuario{% endif %}</h1>
+    </div>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-row">
+                <label>Nombre</label><br>
+                <input type="text" name="nombre" value="{{ usuario.nombre if usuario else '' }}" required>
+            </div>
+            <div class="form-row">
+                <label>Correo</label><br>
+                <input type="email" name="correo" value="{{ usuario.correo if usuario else '' }}" required>
+            </div>
+            <div class="form-row">
+                <label>Matrícula</label><br>
+                <input type="text" name="matricula" value="{{ usuario.matricula if usuario else '' }}">
+            </div>
+            <div class="form-row">
+                <label>Contraseña (dejar en blanco para no cambiar)</label><br>
+                <input type="password" name="password" value="">
+            </div>
+            <div class="form-row">
+                <button type="submit">Guardar</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

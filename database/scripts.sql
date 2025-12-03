@@ -83,8 +83,31 @@ CREATE TABLE IF NOT EXISTS publicaciones (
 
 CREATE INDEX idx_publicaciones_vendedor ON publicaciones(id_vendedor);
 CREATE INDEX idx_publicaciones_estado ON publicaciones(estado_publicacion);
-ALTER TABLE publicaciones DROP COLUMN metadatos, ADD COLUMN edificio VARCHAR(50) COLLATE utf8mb4_unicode_ci NOT NULL;
+-- Replace free-text `edificio` with a normalized `edificios` table reference
+ALTER TABLE publicaciones DROP COLUMN metadatos;
+-- add nullable foreign key column to reference edificios (backwards-compatible)
+ALTER TABLE publicaciones ADD COLUMN id_edificio INT NULL;
 ALTER TABLE publicaciones ADD FULLTEXT INDEX ft_publicaciones_titulo_descripcion (titulo, descripcion);
+
+-- ===== EDIFICIOS =====
+CREATE TABLE IF NOT EXISTS edificios (
+  idEdificio INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(150) NOT NULL,
+  descripcion TEXT,
+  esta_activa TINYINT(1) DEFAULT 1,
+  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- FK from publicaciones to edificios (if an edificio is removed, keep publicaciones but null the reference)
+ALTER TABLE publicaciones ADD CONSTRAINT fk_publicaciones_edificio FOREIGN KEY (id_edificio) REFERENCES edificios(idEdificio) ON DELETE SET NULL;
+-- Seed some common edificios (only if not present)
+INSERT INTO edificios (nombre, descripcion, esta_activa)
+VALUES
+  ('U (bancas)', 'Punto de entrega U - bancas', 1),
+  ('L (bancas)', 'Punto de entrega L - bancas', 1),
+  ('F (bancas)', 'Punto de entrega F - bancas', 1)
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+-- Now that we have edificios table, we can drop the old free-text edificio column
+ALTER TABLE publicaciones DROP COLUMN edificio;
 
 -- ===== IMAGENES_PUBLICACION =====
 CREATE TABLE IF NOT EXISTS imagenes_publicacion (

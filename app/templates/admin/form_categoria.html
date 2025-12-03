@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if categoria %}Editar Categoría{% else %}Nueva Categoría{% endif %}</title>
+    <link rel="stylesheet" href="../../static/css/admin.css">
+    <link rel="stylesheet" href="../../static/css/admin-lista.css">
+    <style>.form-row{margin:12px 0}</style>
+</head>
+<body class="admin-body">
+    <a href="{{ url_for('auth.admin_categorias') }}" class="btn-back">← Volver</a>
+
+    <div class="page-header">
+        <h1 class="page-title">{% if categoria %}Editar Categoría{% else %}Nueva Categoría{% endif %}</h1>
+    </div>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-row">
+                <label>Nombre</label><br>
+                <input type="text" name="nombre" value="{{ categoria.nombre_categoria if categoria else '' }}" required>
+            </div>
+            <div class="form-row">
+                <label><input type="checkbox" name="esta_activa" {% if categoria and categoria.esta_activa %}checked{% endif %}> Activa</label>
+            </div>
+            <div class="form-row">
+                <button type="submit">Guardar</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

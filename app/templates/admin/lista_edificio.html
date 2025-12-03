@@ -11,7 +11,7 @@
 
     <div class="page-header">
         <h1 class="page-title">Edificios</h1>
-        <a href="#" class="btn-add">Agregar Edificio</a>
+        <a href="{{ url_for('auth.admin_edificio_nuevo') }}" class="btn-add">Agregar Edificio</a>
     </div>
 
     <div class="table-container">
@@ -20,6 +20,7 @@
                 <tr>
                     <th style="width: 50px;">ID</th>
                     <th>Nombre del Edificio</th>
+                    <th style="width:120px;">Estado</th>
                     <th>Descripción / Ubicación</th>
                     <th style="width: 150px;">Acciones</th>
                 </tr>
@@ -29,11 +30,18 @@
                 <tr>
                     <td>{{ e.idEdificio }}</td>
                     <td><strong>{{ e.nombre }}</strong></td>
+                    <td>
+                        {% if e.esta_activa %}
+                            <span class="status-active">Activa</span>
+                        {% else %}
+                            <span class="status-inactive">Inactiva</span>
+                        {% endif %}
+                    </td>
                     <td>{{ e.descripcion if e.descripcion else '-' }}</td>
                     <td>
                         <div class="action-buttons">
-                            <a href="#" class="btn-action btn-edit">Modificar</a>
-                            <form action="#" method="POST">
+                            <a href="{{ url_for('auth.admin_edificio_editar', id=e.idEdificio) }}" class="btn-action btn-edit">Modificar</a>
+                            <form action="{{ url_for('auth.admin_edificio_eliminar', id=e.idEdificio) }}" method="POST" onsubmit="return confirm('¿Eliminar este edificio?')">
                                 <button type="submit" class="btn-action btn-delete">Eliminar</button>
                             </form>
                         </div>

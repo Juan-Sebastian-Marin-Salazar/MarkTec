@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Administrar Usuarios</title>
-    <link rel="stylesheet" href="../../static/css/admin-usuario.css">
+    <link rel="stylesheet" href="../../static/css/admin-lista.css">
 </head>
 <body>
 
@@ -11,7 +11,7 @@
 
     <div class="page-header">
         <h1 class="page-title">Usuarios</h1>
-        <a href="#" class="btn-add">Agregar Usuario</a>
+        <a href="{{ url_for('auth.admin_usuario_nuevo') }}" class="btn-add">Agregar Usuario</a>
     </div>
 
     <div class="table-container">
@@ -23,6 +23,7 @@
                     <th>Correo</th>
                     <th>Matrícula</th>
                     <th>Rol</th>
+                    <th style="width:120px;">Status</th>
                     <th style="width: 150px;">Acciones</th>
                 </tr>
             </thead>
@@ -37,10 +38,17 @@
                         {{ u.rol if u.rol else 'Usuario' }}
                     </td>
                     <td>
-                        <div class="action-buttons">
-                            <a href="#" class="btn-action btn-edit">Modificar</a>
+                        {% if u.eliminado_en %}
+                            SD -&gt; X
+                        {% else %}
                             
-                            <form action="#" method="POST">
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{{ url_for('auth.admin_usuario_editar', id=u.idUsuarios) }}" class="btn-action btn-edit">Modificar</a>
+                            
+                            <form action="{{ url_for('auth.admin_usuario_eliminar', id=u.idUsuarios) }}" method="POST" onsubmit="return confirm('¿Eliminar este usuario?')">
                                 <button type="submit" class="btn-action btn-delete">Eliminar</button>
                             </form>
                         </div>

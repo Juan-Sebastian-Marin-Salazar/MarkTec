@@ -14,21 +14,21 @@
       
       <tbody>
         <tr class="model-row">
-          <th scope="row"><a href="#">Usuario</a></th>
-          <td class="action-cell"><a href="#" class="addlink">Agregar</a></td>
-          <td class="action-cell"><a href="#" class="changelink">Modificar</a></td>
+          <th scope="row"><a href="{{ url_for('auth.admin_usuarios') }}">Usuarios</a></th>
+          <td class="action-cell"><a href="{{ url_for('auth.admin_usuarios') }}" class="addlink">Agregar</a></td>
+          <td class="action-cell"><a href="{{ url_for('auth.admin_usuarios') }}" class="changelink">Modificar</a></td>
         </tr>
 
         <tr class="model-row">
-          <th scope="row"><a href="#">Características</a></th>
-          <td class="action-cell"><a href="#" class="addlink">Agregar</a></td>
-          <td class="action-cell"><a href="#" class="changelink">Modificar</a></td>
+          <th scope="row"><a href="{{ url_for('auth.admin_categorias') }}">Categorías</a></th>
+          <td class="action-cell"><a href="{{ url_for('auth.admin_categorias') }}" class="addlink">Agregar</a></td>
+          <td class="action-cell"><a href="{{ url_for('auth.admin_categorias') }}" class="changelink">Modificar</a></td>
         </tr>
 
         <tr class="model-row">
-          <th scope="row"><a href="#">Edificio</a></th>
-          <td class="action-cell"><a href="#" class="addlink">Agregar</a></td>
-          <td class="action-cell"><a href="#" class="changelink">Modificar</a></td>
+          <th scope="row"><a href="{{ url_for('auth.admin_edificios') }}">Edificios</a></th>
+          <td class="action-cell"><a href="{{ url_for('auth.admin_edificios') }}" class="addlink">Agregar</a></td>
+          <td class="action-cell"><a href="{{ url_for('auth.admin_edificios') }}" class="changelink">Modificar</a></td>
         </tr>
       </tbody>
     </table>

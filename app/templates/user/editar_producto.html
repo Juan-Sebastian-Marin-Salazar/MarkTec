@@ -76,9 +76,9 @@
                     <label for="edificio" class="form-label">Edificio *</label>
                     <select name="edificio" id="edificio" class="form-select" required>
                         <option value="" disabled>Selecciona un punto de entrega</option>
-                        <option value="U (bancas)" {% if producto.edificio == 'U (bancas)' %}selected{% endif %}>U (bancas)</option>
-                        <option value="L (bancas)" {% if producto.edificio == 'L (bancas)' %}selected{% endif %}>L (bancas)</option>
-                        <option value="F (bancas)" {% if producto.edificio == 'F (bancas)' %}selected{% endif %}>F (bancas)</option>
+                        {% for ed in edificios %}
+                            <option value="{{ ed.idEdificio }}" {% if ed.idEdificio == edificio_actual %}selected{% endif %}>{{ ed.nombre }}</option>
+                        {% endfor %}
                     </select>
                     </div>
                     <!-- Categoría -->
