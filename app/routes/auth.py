@@ -455,6 +455,7 @@ def editar_producto(pub_id):
 def detalle_producto(pub_id):
     if "usuario_id" not in session:
         return redirect(url_for("auth.login"))
+    usuario_id = session["usuario_id"]
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -482,6 +483,31 @@ def detalle_producto(pub_id):
         ORDER BY orden ASC
     """, (pub_id,))
     imagenes = cursor.fetchall()
+    # CALIFICACIONES: Promedio y total
+    cursor.execute("""
+        SELECT 
+            COALESCE(ROUND(AVG(estrellas), 1), 0) AS promedio,
+            COUNT(*) AS total
+        FROM calificaciones
+        WHERE id_publicacion = %s
+    """, (pub_id,))
+    calificacion_info = cursor.fetchone()
+    # Saber si el usuario puede calificar (tiene transacción finalizada)
+    cursor.execute("""
+        SELECT 1 
+        FROM transaccion
+        WHERE id_publicacion = %s 
+          AND id_comprador = %s
+          AND estado = 'finalizada'
+    """, (pub_id, usuario_id))
+    puede_calificar = cursor.fetchone() is not None
+    # Saber si ya calificó antes (evitar doble calificación)
+    cursor.execute("""
+        SELECT estrellas
+        FROM calificaciones
+        WHERE id_publicacion = %s AND id_usuario = %s
+    """, (pub_id, usuario_id))
+    ya_califico = cursor.fetchone()
 
     cursor.close()
     conn.close()
@@ -489,8 +515,71 @@ def detalle_producto(pub_id):
     return render_template(
         "user/producto.html",
         producto=producto,
-        imagenes=imagenes
+        imagenes=imagenes,
+        calificacion_info=calificacion_info,
+        puede_calificar=puede_calificar,
+        ya_califico=ya_califico
     )
+
+# ---------- CALIFICAR PUBLICACIÓN ----------
+@bp.route("/calificar/<int:pub_id>", methods=["POST"])
+def calificar(pub_id):
+    if "usuario_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    usuario_id = session["usuario_id"]
+    calificacion = request.form.get("calificacion")
+
+    if not calificacion:
+        flash("Debes seleccionar una calificación.")
+        return redirect(url_for("auth.detalle_producto", pub_id=pub_id))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # validar que el usuario tenga una transacción finalizada con ese producto
+    cursor.execute("""
+        SELECT 1
+        FROM transaccion
+        WHERE id_publicacion = %s
+          AND id_comprador = %s
+          AND estado = 'finalizada'
+    """, (pub_id, usuario_id))
+
+    tiene_permitido = cursor.fetchone()
+
+    if not tiene_permitido:
+        flash("Solo puedes calificar productos que hayas comprado.")
+        cursor.close()
+        conn.close()
+        return redirect(url_for("auth.detalle_producto", pub_id=pub_id))
+
+    # Evitar calificación duplicada
+    cursor.execute("""
+        SELECT 1 FROM calificaciones
+        WHERE id_publicacion = %s AND id_usuario = %s
+    """, (pub_id, usuario_id))
+
+    ya_califico = cursor.fetchone()
+
+    if ya_califico:
+        flash("Ya has calificado este producto.")
+        cursor.close()
+        conn.close()
+        return redirect(url_for("auth.detalle_producto", pub_id=pub_id))
+
+    # Insertar calificación
+    cursor.execute("""
+        INSERT INTO calificaciones (id_publicacion, id_usuario, estrellas)
+        VALUES (%s, %s, %s)
+    """, (pub_id, usuario_id, calificacion))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("¡Gracias por tu calificación!")
+    return redirect(url_for("auth.detalle_producto", pub_id=pub_id))
 
 # ---------- ELIMINAR IMAGEN DE PUBLICACIÓN ----------
 @bp.route("/eliminar-imagen/<int:img_id>", methods=["POST"]) 
@@ -746,7 +835,7 @@ def admin_usuarios():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT u.idUsuarios, u.nombre, u.correo, u.matricula, u.eliminado_en,
+            SELECT u.idUsuarios, u.nombre, u.correo, u.matricula, u.telefono, u.eliminado_en,
                    (SELECT GROUP_CONCAT(r.nombre_rol SEPARATOR ', ') FROM usuarios_roles ur JOIN roles r ON ur.id_rol = r.idRoles WHERE ur.id_usuario = u.idUsuarios) AS rol
             FROM usuarios u
             ORDER BY u.idUsuarios ASC
@@ -812,7 +901,6 @@ def admin_edificio_nuevo():
     flash('Edificio creado correctamente.')
     return redirect(url_for('auth.admin_edificios'))
 
-
 # ---------- ADMIN: EDITAR EDIFICIO ----------
 @bp.route('/admin/edificios/editar/<int:id>', methods=['GET', 'POST'])
 def admin_edificio_editar(id):
@@ -855,7 +943,6 @@ def admin_edificio_editar(id):
     flash('Edificio actualizado.')
     return redirect(url_for('auth.admin_edificios'))
 
-
 # ---------- ADMIN: ELIMINAR EDIFICIO (soft) ----------
 @bp.route('/admin/edificios/eliminar/<int:id>', methods=['POST'])
 def admin_edificio_eliminar(id):
@@ -874,7 +961,6 @@ def admin_edificio_eliminar(id):
 
     flash('Edificio desactivado.')
     return redirect(url_for('auth.admin_edificios'))
-
 
 # ---------- ADMIN: CREAR CATEGORIA ----------
 @bp.route('/admin/categorias/nuevo', methods=['GET', 'POST'])
@@ -904,7 +990,6 @@ def admin_categoria_nuevo():
 
     flash('Categoría creada correctamente.')
     return redirect(url_for('auth.admin_categorias'))
-
 
 # ---------- ADMIN: EDITAR CATEGORIA ----------
 @bp.route('/admin/categorias/editar/<int:id>', methods=['GET', 'POST'])
@@ -946,7 +1031,6 @@ def admin_categoria_editar(id):
     flash('Categoría actualizada.')
     return redirect(url_for('auth.admin_categorias'))
 
-
 # ---------- ADMIN: ELIMINAR CATEGORIA (soft) ----------
 @bp.route('/admin/categorias/eliminar/<int:id>', methods=['POST'])
 def admin_categoria_eliminar(id):
@@ -965,7 +1049,6 @@ def admin_categoria_eliminar(id):
 
     flash('Categoría desactivada.')
     return redirect(url_for('auth.admin_categorias'))
-
 
 # ---------- ADMIN: ELIMINAR USUARIO ----------
 @bp.route('/admin/usuarios/eliminar/<int:id>', methods=['POST'])
@@ -986,7 +1069,6 @@ def admin_usuario_eliminar(id):
     flash('Usuario marcado como eliminado.')
     return redirect(url_for('auth.admin_usuarios'))
 
-
 # ---------- ADMIN: CREAR USUARIO ----------
 @bp.route('/admin/usuarios/nuevo', methods=['GET', 'POST'])
 def admin_usuario_nuevo():
@@ -1002,6 +1084,7 @@ def admin_usuario_nuevo():
     nombre = request.form.get('nombre')
     correo = request.form.get('correo')
     matricula = request.form.get('matricula')
+    telefono = request.form.get('telefono')
     password = request.form.get('password')
 
     if not nombre or not correo:
@@ -1016,9 +1099,9 @@ def admin_usuario_nuevo():
         conn = get_db_connection()
         cursor = conn.cursor()
         if clave_hash:
-            cursor.execute('INSERT INTO usuarios (nombre, correo, matricula, clave_hash) VALUES (%s, %s, %s, %s)', (nombre, correo, matricula, clave_hash))
+            cursor.execute('INSERT INTO usuarios (nombre, correo, matricula, telefono, clave_hash) VALUES (%s, %s, %s, %s, %s)', (nombre, correo, matricula, telefono, clave_hash))
         else:
-            cursor.execute('INSERT INTO usuarios (nombre, correo, matricula, clave_hash) VALUES (%s, %s, %s, %s)', (nombre, correo, matricula, ''))
+            cursor.execute('INSERT INTO usuarios (nombre, correo, matricula, telefono, clave_hash) VALUES (%s, %s, %s, %s, %s)', (nombre, correo, matricula, telefono, ''))
         conn.commit()
         cursor.close()
         conn.close()
@@ -1028,7 +1111,6 @@ def admin_usuario_nuevo():
 
     flash('Usuario creado correctamente.')
     return redirect(url_for('auth.admin_usuarios'))
-
 
 # ---------- ADMIN: EDITAR USUARIO ----------
 @bp.route('/admin/usuarios/editar/<int:id>', methods=['GET', 'POST'])
@@ -1041,7 +1123,7 @@ def admin_usuario_editar(id):
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT idUsuarios, nombre, correo, matricula FROM usuarios WHERE idUsuarios=%s', (id,))
+    cursor.execute('SELECT idUsuarios, nombre, correo, matricula, telefono FROM usuarios WHERE idUsuarios=%s', (id,))
     u = cursor.fetchone()
 
     if not u:
@@ -1058,6 +1140,7 @@ def admin_usuario_editar(id):
     nombre = request.form.get('nombre')
     correo = request.form.get('correo')
     matricula = request.form.get('matricula')
+    telefono = request.form.get('telefono')
     password = request.form.get('password')
 
     if not nombre or not correo:
@@ -1067,9 +1150,9 @@ def admin_usuario_editar(id):
     try:
         if password:
             clave_hash = hashlib.sha256(password.encode()).hexdigest()
-            cursor.execute('UPDATE usuarios SET nombre=%s, correo=%s, matricula=%s, clave_hash=%s WHERE idUsuarios=%s', (nombre, correo, matricula, clave_hash, id))
+            cursor.execute('UPDATE usuarios SET nombre=%s, correo=%s, matricula=%s, telefono=%s, clave_hash=%s WHERE idUsuarios=%s', (nombre, correo, matricula, telefono, clave_hash, id))
         else:
-            cursor.execute('UPDATE usuarios SET nombre=%s, correo=%s, matricula=%s WHERE idUsuarios=%s', (nombre, correo, matricula, id))
+            cursor.execute('UPDATE usuarios SET nombre=%s, correo=%s, matricula=%s, telefono=%s WHERE idUsuarios=%s', (nombre, correo, matricula, telefono, id))
         conn.commit()
         cursor.close()
         conn.close()

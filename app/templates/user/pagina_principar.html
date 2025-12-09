@@ -22,9 +22,11 @@
         <!-- HEADER -->
         <div class="header">
             <div class="left-section">
-                <button class=" admin" type="button">
+                {% if 'administrador' in roles %}
+                <a href="{{ url_for('auth.admin') }}" class="admin" style="text-decoration: none;">
                     <span>Admin</span>
-                </button>
+                </a>
+                {% endif %}
                 <h2 class="titulo">MarketPlace</h2>
                 <div class="search-container" style="position:relative;">
                     <span class="search-icon"></span>

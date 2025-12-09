@@ -30,6 +30,10 @@
                 <input type="text" name="matricula" value="{{ usuario.matricula if usuario else '' }}">
             </div>
             <div class="form-row">
+                <label>Teléfono</label><br>
+                <input type="tel" name="telefono" value="{{ usuario.telefono if usuario else '' }}">
+            </div>
+            <div class="form-row">
                 <label>Contraseña (dejar en blanco para no cambiar)</label><br>
                 <input type="password" name="password" value="">
             </div>

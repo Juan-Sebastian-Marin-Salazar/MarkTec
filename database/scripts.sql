@@ -157,20 +157,18 @@ CREATE TABLE IF NOT EXISTS publicaciones_categoria (
   CONSTRAINT fk_pe_categoria FOREIGN KEY (id_categoria) REFERENCES categorias(idCategorias) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===== PERMISOS =====
-CREATE TABLE IF NOT EXISTS permisos (
-  idPermisos INT AUTO_INCREMENT PRIMARY KEY,
-  nombre_permiso VARCHAR(150) NOT NULL UNIQUE,
-  descripcion TEXT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS calificaciones (
+    idCalificacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_publicacion INT NOT NULL,
+    id_usuario INT NOT NULL,
+    estrellas TINYINT NOT NULL CHECK (estrellas BETWEEN 1 AND 5),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE IF NOT EXISTS roles_permisos (
-  id_rol INT NOT NULL,
-  id_permiso INT NOT NULL,
-  PRIMARY KEY (id_rol, id_permiso),
-  CONSTRAINT fk_roles_permisos_rol FOREIGN KEY (id_rol) REFERENCES roles(idRoles) ON DELETE CASCADE,
-  CONSTRAINT fk_roles_permisos_permiso FOREIGN KEY (id_permiso) REFERENCES permisos(idPermisos) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    CONSTRAINT fk_calificacion_publicacion FOREIGN KEY (id_publicacion) REFERENCES publicaciones(idPublicaciones) ON DELETE CASCADE,
+    CONSTRAINT fk_calificacion_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(idUsuarios) ON DELETE CASCADE,
+    -- Evita doble calificación del mismo usuario
+    UNIQUE(id_usuario, id_publicacion)
+);
 
 -- ===== SEED DATA =====
 INSERT INTO roles (nombre_rol, tipo_rol, descripcion) VALUES

@@ -260,3 +260,41 @@
 .btn-transaccion svg {
     margin-top: 2px;
 }
+/* ---- ESTRELLAS DE CALIFICACIÓN ---- */
+.estrellas-promedio {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.estrellas-promedio span {
+    font-size: 22px;
+    color: gold;
+}
+
+.calificar-container {
+    margin-top: 40px;
+    padding: 20px;
+    border-top: 1px solid #ccc;
+}
+
+.calificar-titulo {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.estrellas-calificar span {
+    font-size: 35px;
+    cursor: pointer;
+    color: #ccc;
+    transition: 0.2s;
+}
+
+.estrellas-calificar span:hover,
+.estrellas-calificar span.seleccionada {
+    color: gold;
+}
