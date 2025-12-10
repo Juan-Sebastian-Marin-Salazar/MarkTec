@@ -24,15 +24,29 @@
             <!-- IMÁGENES -->
             <div class="producto-imagen">
                 <div class="imagen-principal">
-                    <img id="mainImage" src="{{ imagenes[0].url if imagenes else '/static/img/default.png' }}"
-                        alt="Imagen principal">
+                    {# Prefer external URLs (http) as main image so Drive/OneDrive links show first #}
+                    {% set main_url = '/static/img/default.png' %}
+                    {% if imagenes %}
+                        {% for img in imagenes %}
+                            {% if main_url == '/static/img/default.png' and img.url[:4] == 'http' %}
+                                {% set main_url = (img.url | replace('uc?export=download','uc?export=view')) %}
+                            {% endif %}
+                        {% endfor %}
+                        {# if no external URL found, use first image in the list #}
+                        {% if main_url == '/static/img/default.png' and imagenes[0].url %}
+                            {% set main_url = (imagenes[0].url | replace('uc?export=download','uc?export=view')) %}
+                        {% endif %}
+                    {% endif %}
+                    <img id="mainImage" src="{{ main_url }}" alt="Imagen principal">
                 </div>
 
                 {% if imagenes %}
                 <div class="imagenes-secundarias">
                     {% for img in imagenes %}
-                    <div class="imagen-miniatura" onclick="cambiarImagen('{{ img.url }}', this)">
-                        <img src="{{ img.url }}">
+                    {# convert common Google Drive download links to view links for embedding #}
+                    {% set thumb_url = img.url | replace('uc?export=download','uc?export=view') %}
+                    <div class="imagen-miniatura" onclick="cambiarImagen('{{ thumb_url }}', this)">
+                        <img src="{{ thumb_url }}">
                     </div>
                     {% endfor %}
                 </div>

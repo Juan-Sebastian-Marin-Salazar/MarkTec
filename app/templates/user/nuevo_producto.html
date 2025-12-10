@@ -40,6 +40,16 @@
                         </div>
                         <div id="imagePreview" class="image-preview"></div>
                     </div>
+                    <div class="form-group">
+                        <label for="imagen_urls_raw" class="form-label">O pega URLs de imágenes (una por línea)</label>
+                        <p style="font-size: 0.85rem; color: #666; margin: 5px 0;">📌 <strong>Métodos soportados:</strong></p>
+                        <ul style="font-size: 0.85rem; color: #666; margin: 5px 0 10px 20px;">
+                            <li>✅ Google Drive: comparte el enlace con "Cualquiera con el enlace puede ver"</li>
+                            <li>✅ URLs directas a imágenes (terminadas en .jpg, .png, .webp)</li>
+                            <li>❌ OneDrive/Outlook: no soportado</li>
+                        </ul>
+                        <textarea id="imagen_urls_raw" name="imagen_urls_raw" class="form-textarea" placeholder="https://drive.google.com/file/d/...\nhttps://ejemplo.com/imagen.jpg" rows="3"></textarea>
+                    </div>
                 </section>
 
                 <hr class="divider">

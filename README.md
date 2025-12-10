@@ -7,11 +7,12 @@ tener creado el entorno virtual de python (.venv), en el mismo vscode o con el c
 luego correr .venv\Scripts\activate
 
 dependencias:
-
 pip install flask
 pip install mysql-connector-python
 pip install python-dotenv
 pip install werkzeug
+pip install requests
+pip install gunicorn
 
 cambios en "credenciales" del .env, checar el 'usuario' de conexion a mysql workbench:
 SECRET_KEY=c24192ad91baa66b2d02a8e252cc570ffc57e5eeb7de02ecefeb54cb5a1922d0

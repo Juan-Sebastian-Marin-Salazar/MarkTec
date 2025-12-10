@@ -8,8 +8,51 @@ from email.mime.text import MIMEText
 import os
 import random
 from werkzeug.utils import secure_filename
+import requests
+from flask import Response, stream_with_context, abort
+from urllib.parse import quote_plus, urljoin
+import re
+from urllib.parse import urlparse, parse_qs
 
 bp = Blueprint("auth", __name__)
+
+
+def _normalize_external_image_url(url: str) -> str:
+    """
+    Normalize common shared links into a direct-viewable image URL when possible.
+    - Google Drive links: convert to `https://drive.google.com/uc?export=view&id=FILE_ID`
+    - Other providers: returned unchanged (best-effort)
+    """
+    if not url:
+        return url
+    url = url.strip()
+    try:
+        # Google Drive pattern: /file/d/<id>/ or ?id=<id>
+        if "drive.google.com" in url:
+            # try /d/ID/
+            if "/d/" in url:
+                parts = url.split('/d/')
+                if len(parts) > 1:
+                    rest = parts[1]
+                    file_id = rest.split('/')[0]
+                    if file_id:
+                        # use export=view to allow embedding/preview instead of forcing download
+                        return f"https://drive.google.com/uc?export=view&id={file_id}"
+            # try id= in query
+            if "id=" in url:
+                q = url.split('id=')[-1]
+                file_id = q.split('&')[0]
+                if file_id:
+                    return f"https://drive.google.com/uc?export=view&id={file_id}"
+            # If the stored link uses uc?export=download, prefer view instead
+            if 'uc?export=download' in url:
+                return url.replace('uc?export=download', 'uc?export=view')
+            # fallback: return original
+            return url
+        # OneDrive/1drv.ms: many shared links work as-is; return unchanged
+        return url
+    except Exception:
+        return url
 
 # ---------- VERIFICAR SI USUARIO ES ADMIN ----------
 def user_is_admin(user_id):
@@ -251,7 +294,10 @@ def nuevo_producto():
     categoria_id = request.form.get("categoria")
     edificio_id = request.form.get("edificio")
     imagenes = request.files.getlist("imagenes")
-    
+    # allow external image URLs pasted as newline-separated values
+    imagen_urls_raw = request.form.get("imagen_urls_raw", "")
+    imagen_urls = [u.strip() for u in (imagen_urls_raw or "").splitlines() if u.strip()]
+
     if not titulo or not precio or not categoria_id or not edificio_id:
         flash("Título, precio, categoría y edificio son obligatorios.")
         return redirect(url_for("auth.nuevo_producto"))
@@ -274,24 +320,52 @@ def nuevo_producto():
     """, (publicacion_id, categoria_id))
     conn.commit()
 
-    # 3. Guardar imágenes localmente
-    if imagenes:
-        uploads_dir = os.path.join(os.getcwd(), "app", "static", "uploads")
-        os.makedirs(uploads_dir, exist_ok=True)
+    # 3. Guardar imágenes: files (saved locally) and external URLs (stored as-is)
+    uploads_dir = os.path.join(os.getcwd(), "app", "static", "uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
 
-        for i, img in enumerate(imagenes):
-            if img and img.filename:
+    orden_idx = 0
+    # save uploaded files first
+    if imagenes:
+        for img in imagenes:
+            if img and getattr(img, 'filename', None):
                 filename = secure_filename(img.filename)
                 ruta_absoluta = os.path.join(uploads_dir, filename)
-                img.save(ruta_absoluta)
+                try:
+                    img.save(ruta_absoluta)
+                except Exception:
+                    # if saving fails, skip this file
+                    continue
 
                 url_imagen = f"/static/uploads/{filename}"
 
-                cursor.execute("""
-                    INSERT INTO imagenes_publicacion (id_publicacion, url, texto_alternativo, orden)
-                    VALUES (%s, %s, %s, %s)
-                """, (publicacion_id, url_imagen, titulo, i))
-        conn.commit()
+                cursor.execute("SELECT COUNT(*) FROM imagenes_publicacion WHERE id_publicacion=%s AND url=%s", (publicacion_id, url_imagen))
+                exists = cursor.fetchone()[0]
+                if exists == 0:
+                    cursor.execute(
+                        """
+                        INSERT INTO imagenes_publicacion (id_publicacion, url, texto_alternativo, orden)
+                        VALUES (%s, %s, %s, %s)
+                        """,
+                        (publicacion_id, url_imagen, titulo, orden_idx)
+                    )
+                    orden_idx += 1
+
+    # then insert any external URLs provided
+    for u in imagen_urls:
+        norm = _normalize_external_image_url(u)
+        cursor.execute("SELECT COUNT(*) FROM imagenes_publicacion WHERE id_publicacion=%s AND url=%s", (publicacion_id, norm))
+        exists = cursor.fetchone()[0]
+        if exists == 0:
+            cursor.execute(
+                """
+                INSERT INTO imagenes_publicacion (id_publicacion, url, texto_alternativo, orden)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (publicacion_id, norm, titulo, orden_idx)
+            )
+            orden_idx += 1
+    conn.commit()
 
     cursor.close()
     conn.close()
@@ -342,7 +416,21 @@ def editar_producto(pub_id):
 
         # cargar imagenes
         cursor.execute("SELECT idImagenesPublicacion, url, orden FROM imagenes_publicacion WHERE id_publicacion=%s ORDER BY orden ASC", (pub_id,))
-        imagenes = cursor.fetchall()
+        imagenes_raw = cursor.fetchall()
+        
+        # Convert external URLs to proxy URLs for rendering
+        imagenes = []
+        for img in imagenes_raw:
+            img_dict = img if isinstance(img, dict) else {'idImagenesPublicacion': img[0], 'url': img[1], 'orden': img[2]}
+            url = img_dict.get('url')
+            if url and str(url).startswith('http'):
+                # proxify external URLs
+                prox = url_for('auth.img_proxy') + '?url=' + quote_plus(url)
+                img_dict['url'] = prox
+                img_dict['is_external'] = True
+            else:
+                img_dict['is_external'] = False
+            imagenes.append(img_dict)
 
         # cargar edificios y edificio actual (si existe)
         cursor.execute("SELECT idEdificio, nombre FROM edificios WHERE esta_activa = 1 ORDER BY nombre")
@@ -371,6 +459,9 @@ def editar_producto(pub_id):
     edificio_id = request.form.get("edificio")
     imagenes_nuevas = request.files.getlist("imagenes")
     imagenes_a_eliminar = request.form.getlist("imagenes_a_eliminar")
+    # allow external image URLs (newline-separated)
+    imagen_urls_raw = request.form.get("imagen_urls_raw", "")
+    imagen_urls = [u.strip() for u in (imagen_urls_raw or "").splitlines() if u.strip()]
 
     if not titulo or not precio or not categoria_id or not edificio_id:
         flash("Título, precio, categoría y edificio son obligatorios.")
@@ -415,36 +506,64 @@ def editar_producto(pub_id):
     cursor.execute("INSERT INTO publicaciones_categoria (id_publicacion, id_categoria) VALUES (%s, %s)", (pub_id, categoria_id))
     conn.commit()
 
-    # Guardar nuevas imágenes (si se suben)
-    if imagenes_nuevas:
-        uploads_dir = os.path.join(os.getcwd(), "app", "static", "uploads")
-        os.makedirs(uploads_dir, exist_ok=True)
+    # Guardar nuevas imágenes (si se suben) y/o URLs externas
+    uploads_dir = os.path.join(os.getcwd(), "app", "static", "uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
 
-        # determine current max orden to append
-        cursor.execute("SELECT COALESCE(MAX(orden), -1) AS maxorden FROM imagenes_publicacion WHERE id_publicacion=%s", (pub_id,))
-        row = cursor.fetchone()
-        start_index = row[0] + 1 if row and isinstance(row[0], int) else 0
+    # determine current max orden to append
+    cursor.execute("SELECT COALESCE(MAX(orden), -1) AS maxorden FROM imagenes_publicacion WHERE id_publicacion=%s", (pub_id,))
+    row = cursor.fetchone()
+    # row may be a tuple or dict depending on cursor; handle both
+    maxorden = None
+    if row is None:
+        maxorden = -1
+    else:
+        try:
+            maxorden = row[0]
+        except Exception:
+            maxorden = row.get('maxorden', -1)
 
-        for i, img in enumerate(imagenes_nuevas):
-            if img and img.filename:
-                filename = secure_filename(img.filename)
-                ruta_absoluta = os.path.join(uploads_dir, filename)
+    start_index = maxorden + 1 if isinstance(maxorden, int) else 0
+
+    files_inserted = 0
+    for i, img in enumerate(imagenes_nuevas):
+        if img and getattr(img, 'filename', None):
+            filename = secure_filename(img.filename)
+            ruta_absoluta = os.path.join(uploads_dir, filename)
+            try:
                 img.save(ruta_absoluta)
+            except Exception:
+                continue
 
-                url_imagen = f"/static/uploads/{filename}"
+            url_imagen = f"/static/uploads/{filename}"
 
-                # Avoid inserting duplicate image rows for the same URL
-                cursor.execute("SELECT COUNT(*) FROM imagenes_publicacion WHERE id_publicacion=%s AND url=%s", (pub_id, url_imagen))
-                exists = cursor.fetchone()[0]
-                if exists == 0:
-                    cursor.execute("""
-                        INSERT INTO imagenes_publicacion (id_publicacion, url, texto_alternativo, orden)
-                        VALUES (%s, %s, %s, %s)
-                    """, (pub_id, url_imagen, titulo, start_index + i))
-                else:
-                    # skip duplicate
-                    pass
-        conn.commit()
+            cursor.execute("SELECT COUNT(*) FROM imagenes_publicacion WHERE id_publicacion=%s AND url=%s", (pub_id, url_imagen))
+            exists = cursor.fetchone()[0]
+            if exists == 0:
+                cursor.execute(
+                    """
+                    INSERT INTO imagenes_publicacion (id_publicacion, url, texto_alternativo, orden)
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    (pub_id, url_imagen, titulo, start_index + files_inserted)
+                )
+                files_inserted += 1
+
+    # now insert any external URLs provided
+    for j, u in enumerate(imagen_urls):
+        norm = _normalize_external_image_url(u)
+        cursor.execute("SELECT COUNT(*) FROM imagenes_publicacion WHERE id_publicacion=%s AND url=%s", (pub_id, norm))
+        exists = cursor.fetchone()[0]
+        if exists == 0:
+            cursor.execute(
+                """
+                INSERT INTO imagenes_publicacion (id_publicacion, url, texto_alternativo, orden)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (pub_id, norm, titulo, start_index + files_inserted + j)
+            )
+
+    conn.commit()
 
     cursor.close()
     conn.close()
@@ -484,7 +603,17 @@ def detalle_producto(pub_id):
         WHERE id_publicacion = %s
         ORDER BY orden ASC
     """, (pub_id,))
-    imagenes = cursor.fetchall()
+    imagenes_raw = cursor.fetchall()
+    # Prepare renderable URLs: proxy external http(s) URLs so browsers always get image bytes
+    imagenes = []
+    for row in imagenes_raw:
+        # row can be dict or tuple depending on cursor
+        u = row.get('url') if isinstance(row, dict) else (row[0] if row else '')
+        if u and u.startswith('http'):
+            prox = url_for('auth.img_proxy') + '?url=' + quote_plus(u)
+            imagenes.append({'url': prox})
+        else:
+            imagenes.append({'url': u})
     # CALIFICACIONES: Promedio y total
     cursor.execute("""
         SELECT 
@@ -522,6 +651,139 @@ def detalle_producto(pub_id):
         puede_calificar=puede_calificar,
         ya_califico=ya_califico
     )
+
+
+@bp.route('/img/proxy')
+def img_proxy():
+    """Fetch remote image and stream it to the client.
+
+    Security: only allow known image hosts (Drive/OneDrive) to reduce SSRF risk.
+    Limits: enforces Content-Length limit when provided and times out on requests.
+    """
+    src = request.args.get('url')
+    if not src:
+        abort(400)
+
+    parsed = urlparse(src)
+    if parsed.scheme not in ('http', 'https'):
+        abort(400)
+
+    allowed_hosts = {
+        'drive.google.com',
+        'lh3.googleusercontent.com',
+        'onedrive.live.com',
+        '1drv.ms'
+    }
+    hostname = parsed.netloc.split(':')[0].lower()
+    if hostname not in allowed_hosts:
+        abort(403)
+
+    try:
+        # For Google Drive, try to request the direct download endpoint (raw bytes)
+        if 'drive.google.com' in hostname:
+            # extract id
+            file_id = None
+            m = re.search(r"/d/([a-zA-Z0-9_-]+)", src)
+            if m:
+                file_id = m.group(1)
+            else:
+                parsed_q = urlparse(src)
+                qs = parse_qs(parsed_q.query)
+                file_id = qs.get('id', [None])[0]
+            if file_id:
+                fetch_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+            else:
+                fetch_url = src
+
+        # For OneDrive/1drv.ms, try to extract cid/resid and build direct download URL
+        elif 'onedrive.live.com' in hostname or '1drv.ms' in hostname:
+            # Try to extract cid and resid from the URL
+            cid = None
+            resid = None
+            
+            # Pattern 1: /i/c/CID/RESID (1drv.ms share format)
+            m = re.search(r'/i/c/([a-f0-9]+)/([^/?]+)', src, re.IGNORECASE)
+            if m:
+                cid, resid = m.group(1), m.group(2)
+            
+            # Pattern 2: cid= and resid= query parameters (if present)
+            if not cid or not resid:
+                parsed_q = urlparse(src)
+                qs = parse_qs(parsed_q.query)
+                cid = cid or (qs.get('cid', [None])[0] if qs.get('cid') else None)
+                resid = resid or (qs.get('id', [None])[0] if qs.get('id') else None)
+            
+            if cid and resid:
+                # Build direct download URL (bypasses preview page)
+                # Format: https://onedrive.live.com/download?cid=CID&resid=RESID&authkey=...
+                fetch_url = f"https://onedrive.live.com/download?cid={cid}&resid={resid}"
+            else:
+                # Fallback to original URL (may return preview page)
+                fetch_url = src
+        else:
+            fetch_url = src
+
+        r = requests.get(fetch_url, stream=True, timeout=10, headers={'User-Agent': 'Mozilla/5.0'}, allow_redirects=True)
+        # if content-length too large, refuse
+        cl = r.headers.get('Content-Length')
+        if cl and int(cl) > 6 * 1024 * 1024:
+            r.close()
+            abort(413)
+
+        content_type = r.headers.get('Content-Type', '')
+        # If we didn't get an image, try some fallback strategies (OneDrive preview pages etc.)
+        if not content_type.startswith('image/'):
+            # Close streaming response before fetching text
+            try:
+                r.close()
+            except Exception:
+                pass
+
+            # Try a non-streaming GET to read the HTML and search for direct image links
+            try:
+                r2 = requests.get(fetch_url, timeout=10, headers={'User-Agent': 'Mozilla/5.0'}, allow_redirects=True)
+                html = r2.text or ''
+            except Exception:
+                abort(502)
+
+            # Look for common image references in the HTML: og:image, <img src=>, data-src attributes
+            img_candidates = []
+            # og:image
+            m = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']', html, flags=re.IGNORECASE)
+            if m:
+                img_candidates.append(m.group(1))
+            # img tags
+            for m in re.finditer(r'<img[^>]+src=["\']([^"\']+)["\']', html, flags=re.IGNORECASE):
+                img_candidates.append(m.group(1))
+            # data-src / data-zoom
+            for m in re.finditer(r'(data-src|data-zoom|data-image)[\s=]+["\']([^"\']+)["\']', html, flags=re.IGNORECASE):
+                img_candidates.append(m.group(2))
+
+            # Try candidates in order
+            for cand in img_candidates:
+                if not cand:
+                    continue
+                # make absolute if needed
+                cand_url = cand if cand.startswith('http') else urljoin(fetch_url, cand)
+                try:
+                    r_img = requests.get(cand_url, stream=True, timeout=10, headers={'User-Agent': 'Mozilla/5.0'}, allow_redirects=True)
+                    ct = r_img.headers.get('Content-Type', '')
+                    cl2 = r_img.headers.get('Content-Length')
+                    if cl2 and int(cl2) > 6 * 1024 * 1024:
+                        r_img.close()
+                        continue
+                    if ct.startswith('image/'):
+                        return Response(stream_with_context(r_img.iter_content(8192)), content_type=ct)
+                    r_img.close()
+                except Exception:
+                    continue
+
+            # No image candidate worked
+            abort(502)
+
+        return Response(stream_with_context(r.iter_content(8192)), content_type=content_type)
+    except requests.exceptions.RequestException:
+        abort(502)
 
 # ---------- CALIFICAR PUBLICACIÓN ----------
 @bp.route("/calificar/<int:pub_id>", methods=["POST"])
@@ -1252,6 +1514,42 @@ def home():
 
     cursor.execute(query_vendedor, params_vend)
     publicaciones_vendedor = cursor.fetchall()
+
+    # Rewrite imagen_url for external URLs to go through the proxy (so thumbnails render)
+    def _proxify_pub_list(pub_list):
+        from urllib.parse import quote_plus
+        proxied = []
+        for p in (pub_list or []):
+            # p may be dict or tuple; handle dict-like
+            try:
+                img = p.get('imagen_url')
+            except Exception:
+                # fallback: assume tuple with imagen_url at index 5 (as per SELECT order)
+                img = p[5] if len(p) > 5 else None
+            if img and str(img).startswith('http'):
+                prox = url_for('auth.img_proxy') + '?url=' + quote_plus(img)
+                # if dict-like, set key; otherwise create a shallow mapping
+                if isinstance(p, dict):
+                    p['imagen_url'] = prox
+                    proxied.append(p)
+                else:
+                    # convert to dict for template use
+                    d = {
+                        'idPublicaciones': p[0],
+                        'titulo': p[1],
+                        'descripcion': p[2],
+                        'precio': p[3],
+                        'vendedor': p[4],
+                        'imagen_url': prox,
+                        'id_categoria': p[6] if len(p) > 6 else None
+                    }
+                    proxied.append(d)
+            else:
+                proxied.append(p)
+        return proxied
+
+    publicaciones_cliente = _proxify_pub_list(publicaciones_cliente)
+    publicaciones_vendedor = _proxify_pub_list(publicaciones_vendedor)
 
     cursor.close()
     conn.close()
