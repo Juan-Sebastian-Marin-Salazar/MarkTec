@@ -187,7 +187,8 @@ def enviar_codigo_email(destinatario, codigo):
 
         # --- CÓDIGO NUEVO (PUERTO 587) ---
         # Usamos SMTP normal con starttls y timeout
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
+        # Agregamos source_address=('0.0.0.0', 0) para obligarlo a usar IPv4
+        server = smtplib.SMTP("smtp.gmail.com", 587, source_address=('0.0.0.0', 0), timeout=20)
         server.starttls()
         server.login(remitente, password)
         server.sendmail(remitente, destinatario, msg.as_string())
