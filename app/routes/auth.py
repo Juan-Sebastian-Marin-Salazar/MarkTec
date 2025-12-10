@@ -1,3 +1,5 @@
+import hashlib 
+from app.db import get_db_connection
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from app.database import get_db_connection
 import hashlib
@@ -34,46 +36,40 @@ def user_is_admin(user_id):
 def index():
     return redirect(url_for("auth.login"))
 
-#@bp.route("/login", methods=["GET", "POST"])
+# ---------- LOGIN ----------
+@bp.route("/login", methods=["GET", "POST"])
 def login():
-    # 1. Todo el proceso de logueo debe ir DENTRO de este bloque
-    if request.method == "POST":
-        correo = request.form.get("correo")
-        password = request.form.get("password")
+    if request.method == "GET":
+        return render_template("user/login.html")
 
-        # 2. VALIDACIÓN DE SEGURIDAD:
-        # Verificamos que correo y password tengan datos antes de usarlos.
-        # Si 'password' está vacío, no intentamos encriptarlo.
-        if correo and password:
-            clave_hash = hashlib.sha256(password.encode()).hexdigest()
+    correo = request.form.get("correo")
+    password = request.form.get("password")
+    clave_hash = hashlib.sha256(password.encode()).hexdigest()
 
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
-            cursor.execute("""
-                SELECT idUsuarios, nombre, matricula, telefono
-                FROM usuarios
-                WHERE correo=%s AND clave_hash=%s
-            """, (correo, clave_hash))
+    cursor.execute("""
+        SELECT idUsuarios, nombre, matricula, telefono
+        FROM usuarios
+        WHERE correo=%s AND clave_hash=%s
+    """, (correo, clave_hash))
 
-            usuario = cursor.fetchone()
-            cursor.close()
-            conn.close()
+    usuario = cursor.fetchone()
+    cursor.close()
+    conn.close()
 
-            if usuario:
-                session["usuario_id"] = usuario["idUsuarios"]
-                session["nombre"] = usuario["nombre"]
-                session["matricula"] = usuario["matricula"]
-                session["telefono"] = usuario.get("telefono")
-                return redirect(url_for("auth.home"))
-            else:
-                flash("Correo o contraseña incorrectos")
-        else:
-            flash("Por favor completa todos los campos")
+    if usuario:
+        session["usuario_id"] = usuario["idUsuarios"]
+        session["nombre"] = usuario["nombre"]
+        session["matricula"] = usuario["matricula"]
+        # almacenar telefono en sesión puede ser útil (opcional)
+        session["telefono"] = usuario.get("telefono")
+        return redirect(url_for("auth.home"))
 
-    # 3. Si es GET, o si el login falló, simplemente mostramos la página.
-    # Esta línea se ejecuta al final para cubrir todos los casos.
-    return render_template("user/login.html")
+    flash("Correo o contraseña incorrectos")
+    return redirect(url_for("auth.login"))
+
 # ---------- REGISTRO DE USUARIO ----------
 @bp.route("/registro", methods=["GET", "POST"])
 def registro():
