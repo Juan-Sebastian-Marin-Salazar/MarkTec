@@ -177,18 +177,33 @@ def registro():
 
 # ---------- VERIFICACIÓN DE VENDEDOR POR CORREO ----------
 def enviar_codigo_email(destinatario, codigo):
-    remitente = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASS")
+    try:
+        remitente = os.getenv("EMAIL_USER")
+        password = os.getenv("EMAIL_PASS")
 
-    mensaje = MIMEText(f"Tu código de verificación es: {codigo}")
-    mensaje["Subject"] = "Código de verificación - Marketec"
-    mensaje["From"] = f"Marketec <{remitente}>"
-    mensaje["To"] = destinatario
+        # Verificación de seguridad
+        if not remitente or not password:
+            print("ERROR CRÍTICO: No se encontraron las variables de entorno EMAIL_USER o EMAIL_PASS")
+            return False
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(remitente, password)
-        server.sendmail(remitente, destinatario, mensaje.as_string())
+        mensaje = MIMEText(f"Tu código de verificación es: {codigo}")
+        mensaje["Subject"] = "Código de verificación - Marketec"
+        mensaje["From"] = f"Marketec <{remitente}>"
+        mensaje["To"] = destinatario
 
+        print(f"Intentando conectar a Gmail con usuario: {remitente}...")
+        
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(remitente, password)
+            server.sendmail(remitente, destinatario, mensaje.as_string())
+        
+        print(f"Éxito: Correo enviado a {destinatario}")
+        return True
+
+    except Exception as e:
+        print(f"ERROR ENVIANDO CORREO: {str(e)}")
+        # Importante: No rompe la app, pero avisa en la consola
+        return False
 
 @bp.route("/verificar-vendedor", methods=["GET", "POST"])
 def verificar_vendedor():
