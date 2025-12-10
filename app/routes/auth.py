@@ -181,30 +181,28 @@ def enviar_codigo_email(destinatario, codigo):
         remitente = os.getenv("EMAIL_USER")
         password = os.getenv("EMAIL_PASS")
 
-        # Verificación de seguridad
-        if not remitente or not password:
-            print("ERROR CRÍTICO: No se encontraron las variables de entorno EMAIL_USER o EMAIL_PASS")
-            return False
+        msg = MIMEText(f"Tu código de verificación es: {codigo}")
+        msg["Subject"] = "Código de verificación - Marketec"
+        msg["From"] = f"Marketec <{remitente}>"
+        msg["To"] = destinatario
 
-        mensaje = MIMEText(f"Tu código de verificación es: {codigo}")
-        mensaje["Subject"] = "Código de verificación - Marketec"
-        mensaje["From"] = f"Marketec <{remitente}>"
-        mensaje["To"] = destinatario
-
-        print(f"Intentando conectar a Gmail con usuario: {remitente}...")
+        # --- CAMBIO IMPORTANTE AQUI ---
+        # Usamos el puerto 587 (TLS) en lugar del 465 (SSL)
+        # Agregamos timeout=30 para que no se congele infinitamente
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=30)
         
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(remitente, password)
-            server.sendmail(remitente, destinatario, mensaje.as_string())
+        server.starttls() # Encriptamos la conexión aquí
+        server.login(remitente, password)
+        server.sendmail(remitente, destinatario, msg.as_string())
+        server.quit()
+        # -----------------------------
         
-        print(f"Éxito: Correo enviado a {destinatario}")
+        print(f"Correo enviado exitosamente a {destinatario}")
         return True
 
     except Exception as e:
-        print(f"ERROR ENVIANDO CORREO: {str(e)}")
-        # Importante: No rompe la app, pero avisa en la consola
+        print(f"ERROR enviando correo: {e}")
         return False
-
 @bp.route("/verificar-vendedor", methods=["GET", "POST"])
 def verificar_vendedor():
     if "usuario_id" not in session:
