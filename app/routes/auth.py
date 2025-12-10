@@ -175,7 +175,6 @@ def registro():
         cursor.close()
         conn.close()
 
-# ---------- VERIFICACIÓN DE VENDEDOR POR CORREO ----------
 def enviar_codigo_email(destinatario, codigo):
     try:
         remitente = os.getenv("EMAIL_USER")
@@ -186,23 +185,22 @@ def enviar_codigo_email(destinatario, codigo):
         msg["From"] = f"Marketec <{remitente}>"
         msg["To"] = destinatario
 
-        # --- CAMBIO IMPORTANTE AQUI ---
-        # Usamos el puerto 587 (TLS) en lugar del 465 (SSL)
-        # Agregamos timeout=30 para que no se congele infinitamente
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=30)
-        
-        server.starttls() # Encriptamos la conexión aquí
+        # --- CÓDIGO NUEVO (PUERTO 587) ---
+        # Usamos SMTP normal con starttls y timeout
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
+        server.starttls()
         server.login(remitente, password)
         server.sendmail(remitente, destinatario, msg.as_string())
         server.quit()
-        # -----------------------------
-        
-        print(f"Correo enviado exitosamente a {destinatario}")
+        # ---------------------------------
+
+        print(f"Correo enviado a {destinatario}")
         return True
 
     except Exception as e:
         print(f"ERROR enviando correo: {e}")
         return False
+
 @bp.route("/verificar-vendedor", methods=["GET", "POST"])
 def verificar_vendedor():
     if "usuario_id" not in session:
