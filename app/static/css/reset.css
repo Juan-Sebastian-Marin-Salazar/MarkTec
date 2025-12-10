@@ -63,10 +63,6 @@ a {
     color: #666;
 }
 
-a:hover {
-    color:#DD302D;
-    text-decoration: none;
-}
 
 .leftfix {
     float: left;

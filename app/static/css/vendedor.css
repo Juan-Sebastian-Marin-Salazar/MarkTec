@@ -20,6 +20,7 @@
 }
 
 .btn-agregar {
+<<<<<<< HEAD
     background: #0066CC;
     color: white;
     padding: 10px 20px;
@@ -34,6 +35,23 @@
     background: rgba(0, 102, 204, 0.7); /* #0066CC con 70% de opacidad (30% de transparencia) */
 }
 
+=======
+    background: #1A73E8;   /* azul más visible */
+    color: #ffffff;        /* texto blanco fuerte */
+    padding: 12px 22px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-agregar:hover {
+    background: #1669c1;
+    transform: translateY(-2px);
+}
+>>>>>>> c14cb18e6f7c93ecc540b7708db322e2c849730f
 /* Asegurar que los filtros tengan su espacio */
 .filtros-categoria {
     display: flex;
@@ -63,6 +81,7 @@
 }
 
 /* Controles para productos propios en modo vendedor */
+<<<<<<< HEAD
 .controles-producto {
     display: none;
     margin-top: 15px;
@@ -75,28 +94,79 @@
 }
 
 .btn-editar, .btn-eliminar {
+=======
+/* Contenedor de los botones */
+.vendedor-actions {
+    display: flex;
+    /* ESTA ES LA CLAVE: 'space-between' empuja los elementos a los extremos */
+    justify-content: space-between; 
+    align-items: center; /* Alinea verticalmente */
+    width: 100%; /* Asegura que ocupe todo el ancho disponible */
+    margin-top: 15px;
+}
+
+/* Estilos de los botones */
+.btn-editar, .btn-eliminar {
+    display: inline-block; /* Para que respeten padding */
+>>>>>>> c14cb18e6f7c93ecc540b7708db322e2c849730f
     padding: 8px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+<<<<<<< HEAD
     font-size: 12px;
+=======
+    font-size: 13px; /* Un poco más legible */
+    font-weight: 500;
+    text-decoration: none; /* Quita subrayado del link */
+>>>>>>> c14cb18e6f7c93ecc540b7708db322e2c849730f
     transition: all 0.3s ease;
 }
 
 .btn-editar {
+<<<<<<< HEAD
     background: #ed8936;
+=======
+    background-color: #ff6600;
+>>>>>>> c14cb18e6f7c93ecc540b7708db322e2c849730f
     color: white;
 }
 
 .btn-editar:hover {
+<<<<<<< HEAD
     background: #dd7711;
 }
 
 .btn-eliminar {
     background: #f56565;
+=======
+    background-color: #ff8533;
+}
+
+.btn-eliminar {
+    background-color: #ff6600;
+>>>>>>> c14cb18e6f7c93ecc540b7708db322e2c849730f
     color: white;
 }
 
 .btn-eliminar:hover {
+<<<<<<< HEAD
     background: #e53e3e;
+=======
+    background-color: #ff8533;
+}
+
+/* Asegura que el formulario no ocupe espacio extra innecesario */
+.form-eliminar {
+    margin: 0;
+}
+/* Forzar estilo del botón "Agregar Producto" */
+a.btn-agregar,
+a.btn-agregar:link,
+a.btn-agregar:visited,
+a.btn-agregar:hover,
+a.btn-agregar:active {
+    color: #ffffff !important;
+    text-decoration: none !important;
+>>>>>>> c14cb18e6f7c93ecc540b7708db322e2c849730f
 }

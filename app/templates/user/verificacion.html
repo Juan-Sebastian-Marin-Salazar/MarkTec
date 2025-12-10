@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Verificación de vendedor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../static/css/contenido.css">
+    <link rel="stylesheet" href="../../static/css/log.css">
+</head>
+<body>
+<div class="page">
+    <div class="contenido">
+
+        <div class="img"></div>
+
+        <div class="forms-container">
+
+            <div class="sub-container">
+                <div class="sub-titulo">Marketec</div>
+
+                {% if paso == 1 %}
+                    <div class="form-description">Verificación por correo</div>
+                {% else %}
+                    <div class="form-description">Ingresa tu código</div>
+                {% endif %}
+            </div>
+
+            <div class="forms-wrapper">
+
+                {% if paso == 1 %}
+                <!-- FORM 1: Enviar código -->
+                <form class="login-datos active" method="POST" action="/verificar-vendedor">
+
+                    <div class="datos">
+                        <label>Correo registrado</label>
+                        <input type="email" disabled value="{{ correo }}">
+                        <div class="help-text">Enviaremos un código a este correo.</div>
+                    </div>
+
+                    <div class="boton">
+                        <button type="submit" name="enviar_codigo" value="1" class="login-boton">
+                            Enviar código al correo
+                        </button>
+                    </div>
+
+                </form>
+                {% endif %}
+
+                {% if paso == 2 %}
+                <!-- FORM 2: confirmar código -->
+                <form class="login-datos active" method="POST" action="/verificar-vendedor">
+
+                    <div class="datos">
+                        <label for="codigo">Código recibido</label>
+                        <input type="text" id="codigo" name="codigo" required placeholder="Código de 6 dígitos">
+                        <div class="help-text">Revisa tu correo para encontrar el código enviado.</div>
+                    </div>
+
+                    <div class="boton">
+                        <button type="submit" class="login-boton">Confirmar código</button>
+                    </div>
+
+                </form>
+                {% endif %}
+
+            </div>
+
+            <div class="divider"></div>
+            <div class="identificar">
+                <p>
+                    <a href="/pagina_principar">Volver al menú principal</a>
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

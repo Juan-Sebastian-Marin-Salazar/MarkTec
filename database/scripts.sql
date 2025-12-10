@@ -1,0 +1,186 @@
+CREATE DATABASE marketec;
+USE marketec;
+
+SET @OLD_SQL_MODE=@@SQL_MODE;
+SET SQL_MODE='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- ===== ROLES =====
+CREATE TABLE IF NOT EXISTS roles (
+  idRoles INT AUTO_INCREMENT PRIMARY KEY,
+  nombre_rol VARCHAR(50) NOT NULL UNIQUE,
+  tipo_rol VARCHAR(20) NOT NULL DEFAULT 'regular',
+  descripcion TEXT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ===== USUARIOS =====
+CREATE TABLE IF NOT EXISTS usuarios (
+  idUsuarios INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(150) NOT NULL,
+  correo VARCHAR(255) NOT NULL UNIQUE,
+  clave_hash VARCHAR(255) NOT NULL,
+  telefono VARCHAR(30),
+  universidad VARCHAR(255) DEFAULT 'Tecnologico de Mexicali',
+  matricula VARCHAR(100),
+  es_vendedor_verificado TINYINT(1) NOT NULL DEFAULT 0,
+  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  eliminado_en TIMESTAMP NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_usuarios_correo ON usuarios(correo);
+
+-- ===== USUARIOS_ROLES =====
+CREATE TABLE IF NOT EXISTS usuarios_roles (
+  id_usuario INT NOT NULL,
+  id_rol INT NOT NULL,
+  asignado_por INT NULL,
+  asignado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_usuario, id_rol),
+  CONSTRAINT fk_ur_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(idUsuarios) ON DELETE CASCADE,
+  CONSTRAINT fk_ur_rol FOREIGN KEY (id_rol) REFERENCES roles(idRoles) ON DELETE CASCADE,
+  CONSTRAINT fk_ur_asignado_por FOREIGN KEY (asignado_por) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Trigger para evitar múltiples roles del tipo sistema
+DROP TRIGGER IF EXISTS trg_usuarios_roles_prevenir_multiple_sistema;
+DELIMITER $$
+CREATE TRIGGER trg_usuarios_roles_prevenir_multiple_sistema
+BEFORE INSERT ON usuarios_roles
+FOR EACH ROW
+BEGIN
+  DECLARE v_tipo VARCHAR(20);
+  DECLARE v_contador INT DEFAULT 0;
+  SELECT tipo_rol INTO v_tipo FROM roles WHERE idRoles = NEW.id_rol LIMIT 1;
+  IF v_tipo = 'system' THEN
+    SELECT COUNT(*) INTO v_contador
+    FROM usuarios_roles ur
+    JOIN roles r ON ur.id_rol = r.idRoles
+    WHERE ur.id_usuario = NEW.id_usuario AND r.tipo_rol = 'system';
+    IF v_contador > 0 THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Un usuario ya tiene un rol de tipo system. Solo se permite uno.';
+    END IF;
+  END IF;
+END$$
+DELIMITER ;
+
+-- ===== PUBLICACIONES =====
+CREATE TABLE IF NOT EXISTS publicaciones (
+  idPublicaciones INT AUTO_INCREMENT PRIMARY KEY,
+  id_vendedor INT NOT NULL,
+  titulo VARCHAR(255) NOT NULL,
+  descripcion TEXT,
+  precio DECIMAL(12,2) NOT NULL DEFAULT 0 CHECK (precio >= 0),
+  moneda VARCHAR(10) DEFAULT 'MXN',
+  existencias INT DEFAULT 1,
+  condicion_producto VARCHAR(30) DEFAULT 'usado',
+  estado_publicacion VARCHAR(30) DEFAULT 'borrador',
+  metadatos JSON DEFAULT (JSON_OBJECT()),
+  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  eliminado_en TIMESTAMP NULL DEFAULT NULL,
+  CONSTRAINT fk_publicaciones_vendedor FOREIGN KEY (id_vendedor) REFERENCES usuarios(idUsuarios) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_publicaciones_vendedor ON publicaciones(id_vendedor);
+CREATE INDEX idx_publicaciones_estado ON publicaciones(estado_publicacion);
+-- Replace free-text `edificio` with a normalized `edificios` table reference
+ALTER TABLE publicaciones DROP COLUMN metadatos;
+-- add nullable foreign key column to reference edificios (backwards-compatible)
+ALTER TABLE publicaciones ADD COLUMN id_edificio INT NULL;
+ALTER TABLE publicaciones ADD FULLTEXT INDEX ft_publicaciones_titulo_descripcion (titulo, descripcion);
+
+-- ===== EDIFICIOS =====
+CREATE TABLE IF NOT EXISTS edificios (
+  idEdificio INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(150) NOT NULL,
+  descripcion TEXT,
+  esta_activa TINYINT(1) DEFAULT 1,
+  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- FK from publicaciones to edificios (if an edificio is removed, keep publicaciones but null the reference)
+ALTER TABLE publicaciones ADD CONSTRAINT fk_publicaciones_edificio FOREIGN KEY (id_edificio) REFERENCES edificios(idEdificio) ON DELETE SET NULL;
+-- Seed some common edificios (only if not present)
+INSERT INTO edificios (nombre, descripcion, esta_activa)
+VALUES
+  ('U (bancas)', 'Punto de entrega U - bancas', 1),
+  ('L (bancas)', 'Punto de entrega L - bancas', 1),
+  ('F (bancas)', 'Punto de entrega F - bancas', 1)
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+-- Now that we have edificios table, we can drop the old free-text edificio column
+ALTER TABLE publicaciones DROP COLUMN edificio;
+
+-- ===== IMAGENES_PUBLICACION =====
+CREATE TABLE IF NOT EXISTS imagenes_publicacion (
+  idImagenesPublicacion INT AUTO_INCREMENT PRIMARY KEY,
+  id_publicacion INT NOT NULL,
+  url VARCHAR(1000) NOT NULL,
+  texto_alternativo VARCHAR(255),
+  orden INT DEFAULT 0,
+  CONSTRAINT fk_imagenes_publicacion FOREIGN KEY (id_publicacion) REFERENCES publicaciones(idPublicaciones) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_imagenes_publicacion ON imagenes_publicacion(id_publicacion);
+
+-- ===== TRANSACCIONES =====
+CREATE TABLE transaccion (
+  id_transaccion int NOT NULL AUTO_INCREMENT,
+  id_vendedor int NOT NULL,
+  id_comprador int NOT NULL,
+  id_publicacion int NOT NULL,
+  estado varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en progreso',
+  fecha_creacion timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_transaccion),
+  KEY fk_vendedor (id_vendedor),
+  KEY fk_comprador (id_comprador),
+  KEY fk_publicacion (id_publicacion),
+  CONSTRAINT fk_comprador FOREIGN KEY (id_comprador) REFERENCES usuarios (idUsuarios) ON DELETE RESTRICT,
+  CONSTRAINT fk_publicacion FOREIGN KEY (id_publicacion) REFERENCES publicaciones (idPublicaciones) ON DELETE RESTRICT,
+  CONSTRAINT fk_vendedor FOREIGN KEY (id_vendedor) REFERENCES usuarios (idUsuarios) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ===== CATEGORIAS =====
+CREATE TABLE IF NOT EXISTS categorias (
+  idCategorias INT AUTO_INCREMENT PRIMARY KEY,
+  nombre_categoria VARCHAR(150) NOT NULL,
+  id_creador INT NULL,
+  esta_activa TINYINT(1) DEFAULT 1,
+  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_etiquetas_creador FOREIGN KEY (id_creador) REFERENCES usuarios(idUsuarios) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ===== PUBLICACIONES_CATEGORIAS =====
+CREATE TABLE IF NOT EXISTS publicaciones_categoria (
+  id_publicacion INT NOT NULL,
+  id_categoria INT NOT NULL,
+  PRIMARY KEY (id_publicacion, id_categoria),
+  CONSTRAINT fk_pe_publicacion FOREIGN KEY (id_publicacion) REFERENCES publicaciones(idPublicaciones) ON DELETE CASCADE,
+  CONSTRAINT fk_pe_categoria FOREIGN KEY (id_categoria) REFERENCES categorias(idCategorias) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS calificaciones (
+    idCalificacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_publicacion INT NOT NULL,
+    id_usuario INT NOT NULL,
+    estrellas TINYINT NOT NULL CHECK (estrellas BETWEEN 1 AND 5),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_calificacion_publicacion FOREIGN KEY (id_publicacion) REFERENCES publicaciones(idPublicaciones) ON DELETE CASCADE,
+    CONSTRAINT fk_calificacion_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(idUsuarios) ON DELETE CASCADE,
+    -- Evita doble calificación del mismo usuario
+    UNIQUE(id_usuario, id_publicacion)
+);
+
+-- ===== SEED DATA =====
+INSERT INTO roles (nombre_rol, tipo_rol, descripcion) VALUES
+('administrador','system','Administrador con todos los permisos'),
+('moderador','system','Modera y revisa contenido'),
+('soporte','system','Atiende tickets y verifica vendedores'),
+('vendedor','regular','Usuario que publica productos'),
+('comprador','regular','Usuario que compra')
+ON DUPLICATE KEY UPDATE nombre_rol = VALUES(nombre_rol);
+
+INSERT INTO categorias (nombre_categoria, id_creador, esta_activa) VALUES ('Alimentos', NULL, 1);
+INSERT INTO categorias (nombre_categoria, id_creador, esta_activa) VALUES ('Productos', NULL, 1);
+INSERT INTO categorias (nombre_categoria, id_creador, esta_activa) VALUES ('Servicios', NULL, 1);
+
+SET SQL_MODE=@OLD_SQL_MODE;

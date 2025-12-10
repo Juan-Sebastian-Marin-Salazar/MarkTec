@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Nuevo Producto</title>
+    <link rel="stylesheet" href="../../static/css/nuevo_producto.css">
+</head>
+
+<body>
+    <!-- Header fijo -->
+    <header class="fixed-header">
+        <div class="header-content">
+            <a href="{{ url_for('auth.home') }}" class="back-button">
+                <span>← Editar Producto</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="form-container">
+
+
+            <hr class="divider">
+
+            <form id="product-form" class="product-form" method="POST" action="/nuevo-producto"
+                enctype="multipart/form-data">
+                <!-- Sección de imagen -->
+                <section class="form-section">
+                    <h2>Imagen del Producto *</h2>
+                    <div class="image-upload-container">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">📷</div>
+                            <p class="upload-title">Sube una imagen</p>
+                            <p class="upload-subtitle">Formatos: JPG, PNG o WEBP (máx. 5MB)</p>
+                            <input type="file" id="imageInput" name="imagenes" accept=".jpg,.jpeg,.png,.webp" multiple
+                                class="file-input">
+                            <label for="imageInput" class="file-label">Seleccionar Archivo</label>
+                        </div>
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="imagen_urls_raw" class="form-label">O pega URLs de imágenes (una por línea)</label>
+                        <p style="font-size: 0.85rem; color: #666; margin: 5px 0;">📌 <strong>Métodos soportados:</strong></p>
+                        <ul style="font-size: 0.85rem; color: #666; margin: 5px 0 10px 20px;">
+                            <li>✅ Google Drive: comparte el enlace con "Cualquiera con el enlace puede ver"</li>
+                            <li>✅ URLs directas a imágenes (terminadas en .jpg, .png, .webp)</li>
+                            <li>❌ OneDrive/Outlook: no soportado</li>
+                        </ul>
+                        <textarea id="imagen_urls_raw" name="imagen_urls_raw" class="form-textarea" placeholder="https://drive.google.com/file/d/...\nhttps://ejemplo.com/imagen.jpg" rows="3"></textarea>
+                    </div>
+                </section>
+
+                <hr class="divider">
+                <!-- Información del producto -->
+                <section class="form-section">
+                    <h2>Información del Producto</h2>
+                    <!-- Nombre del producto -->
+                    <div class="form-group">
+                        <label for="productName" class="form-label">
+                            Nombre del Producto *
+                        </label>
+                        <input type="text" id="productName" name="titulo" class="form-input" maxlength="100"
+                            placeholder="Ej: Tacos al Pastor - Orden de 3" required>
+                    </div>
+                    <!-- Edificio -->
+                    <div class="form-group">
+                        <label for="edificio" class="form-label">Edificio *</label>
+                        <select name="edificio" id="edificio" class="form-select" required>
+                            <option value="" disabled selected>Selecciona un punto de entrega</option>
+                            {% for ed in edificios %}
+                                <option value="{{ ed.idEdificio }}">{{ ed.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Categoría -->
+                    <div class="form-group">
+                        <label for="category" class="form-label">
+                            Categoría *
+                        </label>
+                        <select id="category" name="categoria" class="form-select" required>
+                            <option value="" disabled selected>Selecciona una categoría</option>
+                            {% for cat in categorias %}
+                            <option value="{{ cat.idCategorias }}">{{ cat.nombre_categoria }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Precio -->
+                    <div class="form-group">
+                        <label for="price" class="form-label">
+                            Precio (MXN) *
+                        </label>
+                        <div class="price-input-container">
+                            <span class="currency-symbol">$</span>
+                            <input type="number" id="price" name="precio" class="form-input price-input" min="0"
+                                step="0.01" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <!-- Descripción -->
+                    <div class="form-group">
+                        <label for="description" class="form-label">
+                            Descripción *
+                        </label>
+                        <textarea id="description" name="descripcion" class="form-textarea" maxlength="500"
+                            placeholder="Describe tu producto detalladamente. Incluye características, ingredientes, especificaciones, etc."
+                            required></textarea>
+                    </div>
+                </section>
+
+                <!-- Botones -->
+                <div class="form-buttons">
+                    <button type="button" class="cancel-btn" onclick="window.history.back()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="submit-btn">
+                        Publicar Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="../../static/js/nuevo_producto.js"></script>
+</body>
+
+</html>
