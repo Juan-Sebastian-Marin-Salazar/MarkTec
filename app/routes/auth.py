@@ -13,6 +13,7 @@ from flask import Response, stream_with_context, abort
 from urllib.parse import quote_plus, urljoin
 import re
 from urllib.parse import urlparse, parse_qs
+import socket
 
 bp = Blueprint("auth", __name__)
 
@@ -180,23 +181,38 @@ def enviar_codigo_email(destinatario, codigo):
         remitente = os.getenv("EMAIL_USER")
         password = os.getenv("EMAIL_PASS")
 
+        if not remitente or not password:
+            print("ERROR: Faltan variables de entorno")
+            return False
+
         msg = MIMEText(f"Tu código de verificación es: {codigo}")
         msg["Subject"] = "Código de verificación - Marketec"
         msg["From"] = f"Marketec <{remitente}>"
         msg["To"] = destinatario
 
-        # --- CÓDIGO NUEVO (PUERTO 587) ---
-        # Usamos SMTP normal con starttls y timeout
-        # Agregamos source_address=('0.0.0.0', 0) para obligarlo a usar IPv4
-        server = smtplib.SMTP("smtp.gmail.com", 587, source_address=('0.0.0.0', 0), timeout=20)
-        server.starttls()
+        print(f"Resolviendo IP de Gmail...")
+        
+        # --- TRUCO MAESTRO: Obtener la IP v4 manualmente ---
+        # Esto evita que Python intente usar IPv6 y evita el Error 101
+        gmail_hostname = "smtp.gmail.com"
+        gmail_ip_v4 = socket.gethostbyname(gmail_hostname)
+        print(f"IP v4 obtenida: {gmail_ip_v4}")
+
+        # Nos conectamos a la IP numérica, no al nombre, y SIN el source_address
+        server = smtplib.SMTP(gmail_ip_v4, 587, timeout=20)
+        
+        server.starttls() 
         server.login(remitente, password)
         server.sendmail(remitente, destinatario, msg.as_string())
         server.quit()
-        # ---------------------------------
+        # ---------------------------------------------------
 
-        print(f"Correo enviado a {destinatario}")
+        print(f"Correo enviado correctamente a {destinatario}")
         return True
+
+    except Exception as e:
+        print(f"ERROR CRÍTICO enviando correo: {e}")
+        return False
 
     except Exception as e:
         print(f"ERROR enviando correo: {e}")
