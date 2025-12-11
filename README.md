@@ -13,6 +13,7 @@ pip install python-dotenv
 pip install werkzeug
 pip install requests
 pip install gunicorn
+pip install sendgrid
 
 cambios en "credenciales" del .env, checar el 'usuario' de conexion a mysql workbench:
 SECRET_KEY=c24192ad91baa66b2d02a8e252cc570ffc57e5eeb7de02ecefeb54cb5a1922d0

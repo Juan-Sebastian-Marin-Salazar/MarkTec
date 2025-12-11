@@ -14,6 +14,9 @@ from urllib.parse import quote_plus, urljoin
 import re
 from urllib.parse import urlparse, parse_qs
 import socket
+import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 bp = Blueprint("auth", __name__)
 
@@ -175,47 +178,31 @@ def registro():
     finally:
         cursor.close()
         conn.close()
-
+# ---------- VERIFICAR VENDEDOR POR EMAIL (sendgrid) ----------
 def enviar_codigo_email(destinatario, codigo):
     try:
-        remitente = os.getenv("EMAIL_USER")
-        password = os.getenv("EMAIL_PASS")
+        remitente = os.getenv("SENDGRID_SENDER")
+        api_key = os.getenv("SENDGRID_API_KEY")
 
-        if not remitente or not password:
-            print("ERROR: Faltan variables de entorno")
+        if not remitente or not api_key:
+            print("ERROR: faltan variables SENDGRID_SENDER o SENDGRID_API_KEY")
             return False
 
-        msg = MIMEText(f"Tu código de verificación es: {codigo}")
-        msg["Subject"] = "Código de verificación - Marketec"
-        msg["From"] = f"Marketec <{remitente}>"
-        msg["To"] = destinatario
+        mensaje = Mail(
+            from_email=remitente,
+            to_emails=destinatario,
+            subject="Código de verificación - Marketec",
+            plain_text_content=f"Tu código de verificación es: {codigo}"
+        )
 
-        print(f"Resolviendo IP de Gmail...")
-        
-        # --- TRUCO MAESTRO: Obtener la IP v4 manualmente ---
-        # Esto evita que Python intente usar IPv6 y evita el Error 101
-        gmail_hostname = "smtp.gmail.com"
-        gmail_ip_v4 = socket.gethostbyname(gmail_hostname)
-        print(f"IP v4 obtenida: {gmail_ip_v4}")
+        sg = SendGridAPIClient(api_key)
+        respuesta = sg.send(mensaje)
 
-        # Nos conectamos a la IP numérica, no al nombre, y SIN el source_address
-        server = smtplib.SMTP(gmail_ip_v4, 587, timeout=20)
-        
-        server.starttls() 
-        server.login(remitente, password)
-        server.sendmail(remitente, destinatario, msg.as_string())
-        server.quit()
-        # ---------------------------------------------------
-
-        print(f"Correo enviado correctamente a {destinatario}")
+        print(f"[SendGrid] Estado: {respuesta.status_code} - Código enviado a {destinatario}")
         return True
 
     except Exception as e:
-        print(f"ERROR CRÍTICO enviando correo: {e}")
-        return False
-
-    except Exception as e:
-        print(f"ERROR enviando correo: {e}")
+        print(f"[SendGrid] ERROR enviando correo: {e}")
         return False
 
 @bp.route("/verificar-vendedor", methods=["GET", "POST"])

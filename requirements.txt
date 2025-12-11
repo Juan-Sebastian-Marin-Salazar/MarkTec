@@ -4,3 +4,4 @@ python-dotenv
 werkzeug
 gunicorn
 requests
+sendgrid
