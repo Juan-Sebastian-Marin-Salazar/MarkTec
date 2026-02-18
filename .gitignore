@@ -1,0 +1,15 @@
+# ARCHIVOS DE ENTORNO
+.env
+*.env
+# PYCACHE
+__pycache__/
+*/__pycache__/
+*.pyc
+# SUBIDAS DE ARCHIVOS
+app/static/uploads/
+# ENTORNO VIRTUAL
+venv/
+env/
+# # ARCHIVOS DE SISTEMA
+# .DS_Store
+# Thumbs.db

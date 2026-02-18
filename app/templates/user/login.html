@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <title>login</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <link rel="stylesheet" href="../../static/css/contenido.css">
+  <link rel="stylesheet" href="../../static/css/log.css">
+</head>
+
+<body>
+ <div class="page">
+    <div class="contenido">
+        <div class="img"></div>
+
+        <div class="forms-container">
+            <div class="sub-container">
+                <div class="sub-titulo">Marketec</div>
+                <div class="form-description">Inicia sesión en tu cuenta</div>
+            </div>
+
+            <!-- Contenedor para ambos formularios -->
+            <div class="forms-wrapper">
+                <!-- Formulario de login -->
+                <form class="login-datos active" method="POST" action="/login">
+                    <div class="datos">
+                        <label for="correo">Correo</label>
+                        <input type="email" id="correo" name="correo" required placeholder="@mexicali.tecnm.mx o @itmexicali.edu.mx">
+                    </div>
+
+                    <div class="datos">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password" required placeholder="………">
+                    </div>
+
+                    <div class="boton">
+                        <button type="submit" class="login-boton">Iniciar Sesión</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="divider"></div>
+            <div class="identificar">
+                <p>Solo se permite el acceso con correo constitucional ¿No tienes una cuenta? 
+                   <a href="/registro">Regístrate aquí</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+  <script src="../../static/js/login.js">
+  </script>
+</body>
+</html>

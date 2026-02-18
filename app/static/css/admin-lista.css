@@ -1,0 +1,129 @@
+/* --- ESTILOS GENERALES (Modo Oscuro) --- */
+body {
+    background-color: #121212;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 30px;
+}
+
+/* Encabezado de la página (Título y Botón Agregar) */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 300;
+    color: #fff;
+    margin: 0;
+}
+
+/* Botón Volver */
+.btn-back {
+    color: #888;
+    text-decoration: none;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 10px;
+}
+.btn-back:hover { color: #fff; }
+
+/* Botón AGREGAR (Estilo oscuro) */
+.btn-add {
+    background-color: #333;
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-add:hover {
+    background-color: #444;
+}
+
+.btn-add::after {
+    content: "+";
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* --- TABLA --- */
+.table-container {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.table-list {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.table-list th {
+    background-color: #262626;
+    color: #ccc;
+    padding: 15px;
+    font-size: 13px;
+    text-transform: uppercase;
+    font-weight: 600;
+    border-bottom: 1px solid #333;
+}
+
+.table-list td {
+    padding: 15px;
+    border-bottom: 1px solid #2a2a2a;
+    color: #ddd;
+    font-size: 14px;
+}
+
+.table-list tr:hover {
+    background-color: #2a2a2a;
+}
+
+/* --- BOTONES DE ACCIÓN --- */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-action {
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: bold;
+    transition: opacity 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-edit {
+    background-color: #eab308; /* Amarillo */
+    color: #000;
+}
+
+.btn-delete {
+    background-color: #ef4444; /* Rojo */
+    color: white;
+}
+
+.btn-action:hover { opacity: 0.8; }
+
+/* Estado Activo/Inactivo */
+.status-active { color: #4ade80; font-weight: bold; }
+.status-inactive { color: #9ca3af; }
